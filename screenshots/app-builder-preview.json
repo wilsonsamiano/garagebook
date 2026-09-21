@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "GarageBook",
+      "hasCanvas": false,
+      "bodyTextLen": 1292,
+      "bodyTextHash": "1815ed178b4f894b7d1f3ad1f6dc3589f8c12c68dda01df52f808e9d999879fc",
+      "bodyTextPrefix": "GarageBook Active vehicle 2015 Toyota Highlander XLE 2018 Tesla ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "GarageBook",
+      "hasCanvas": false,
+      "bodyTextLen": 1292,
+      "bodyTextHash": "1815ed178b4f894b7d1f3ad1f6dc3589f8c12c68dda01df52f808e9d999879fc",
+      "bodyTextPrefix": "GarageBook Active vehicle 2015 Toyota Highlander XLE 2018 Tesla ",
+      "horizontalOverflow": false,
+      "consoleErrors": [
+        "A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:\n\n- A server/client branch `if (typeof window !== 'undefined')`.\n- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.\n- Date formatting in a user's locale which doesn't match the server.\n- External changing data without sending a snapshot of it along with the HTML.\n- Invalid HTML tag nesting.\n\nIt can also happen if the client has a browser extension installed which messes with the HTML before React loaded.\n\n%s%s https://react.dev/link/hydration-mismatch \n\n  ...\n    <SafeFragment fallback={null}>\n      <CatchBoundary getResetKey={function getResetKey} errorComponent={function AppErrorComponent} ...>\n        <SafeFragment fallback={function fallback}>\n          <MatchInnerImpl match={{id:\"//\",ssr:true, ...}}>\n            <Lazy>\n              <Home>\n                <div className=\"min-h-dvh ...\">\n                  <header>\n                  <main className=\"mx-auto ma...\">\n                    <HomeView stats={{rows:[...], ...}} recs={[...]} ownership={{vehicle:\"2...\", ...}} ...>\n                      <div className=\"space-y-4\">\n                        <ClusterFace>\n                        <div>\n                        <_c>\n                        <DueList>\n                        <_c>\n                        <_c>\n                          <div ref={null} className=\"rounded-xl...\">\n                            <_c3>\n                            <_c5>\n                            <div className=\"grid grid-...\">\n                              <FileButton label=\"Fuel receipt\" icon={<Receipt>} onFile={function onFile}>\n                                <label className={undefined}>\n                                  <input\n                                    type=\"file\"\n                                    accept=\"image/*\"\n                                    capture=\"environment\"\n                                    className=\"sr-only\"\n                                    onChange={function onChange}\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                              <FileButton label=\"Cluster\" gold={true} icon={<Camera>} onFile={function onFile}>\n                                <label className={undefined}>\n                                  <input\n                                    type=\"file\"\n                                    accept=\"image/*\"\n                                    capture=\"environment\"\n                                    className=\"sr-only\"\n                                    onChange={function onChange}\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                              <FileButton label=\"Shop receipt\" icon={<Wrench>} onFile={function onFile} ...>\n                                <label className=\"col-span-2\">\n                                  <input\n                                    type=\"file\"\n                                    accept=\"image/*\"\n                                    capture=\"environment\"\n                                    className=\"sr-only\"\n                                    onChange={function onChange}\n-                                   style={{caret-color:\"transparent\"}}\n                                  >\n                                  ...\n                            ...\n                  ...\n"
+      ],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

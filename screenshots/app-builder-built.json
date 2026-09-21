@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "GarageBook",
+      "hasCanvas": false,
+      "bodyTextLen": 1292,
+      "bodyTextHash": "1815ed178b4f894b7d1f3ad1f6dc3589f8c12c68dda01df52f808e9d999879fc",
+      "bodyTextPrefix": "GarageBook Active vehicle 2015 Toyota Highlander XLE 2018 Tesla ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "GarageBook",
+      "hasCanvas": false,
+      "bodyTextLen": 1292,
+      "bodyTextHash": "1815ed178b4f894b7d1f3ad1f6dc3589f8c12c68dda01df52f808e9d999879fc",
+      "bodyTextPrefix": "GarageBook Active vehicle 2015 Toyota Highlander XLE 2018 Tesla ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}
