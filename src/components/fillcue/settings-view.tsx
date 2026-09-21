@@ -5,6 +5,7 @@ import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { EpaLookup } from "@/components/fillcue/epa-lookup";
+import { InstallCard } from "@/components/fillcue/install-card";
 import { Segmented } from "@/components/fillcue/segmented";
 import { DUE_DISCLAIMER_FULL } from "@/lib/fillcue/recommend";
 import {
@@ -305,6 +306,8 @@ export function SettingsView() {
           </Button>
         </form>
       </Card>
+
+      <InstallCard />
 
       <Card>
         <CardTitle>Ownership spreadsheet</CardTitle>

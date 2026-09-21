@@ -1,6 +1,7 @@
 import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-router";
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
+import { PwaRegister } from "@/components/fillcue/pwa-register";
 import appCss from "../styles.css?url";
 
 const APP_NAME = "GarageBook";
@@ -17,13 +18,17 @@ export const Route = createRootRoute({
       },
       { name: "theme-color", content: "#1B365D" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-title", content: "GarageBook" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "prefetch", href: "/__grok/manifest.webmanifest" },
+      { rel: "prefetch", href: "/__grok/icon-180.png" },
       { rel: "stylesheet", href: appCss },
-      { rel: "manifest", href: "/__grok/manifest.webmanifest" },
-      { rel: "apple-touch-icon", href: "/__grok/icon-180.png" },
     ],
   }),
   component: () => (
@@ -33,6 +38,7 @@ export const Route = createRootRoute({
       </head>
       <body>
         <PreviewHostBridge />
+        <PwaRegister />
         <AuthProvider>
           <Outlet />
         </AuthProvider>

@@ -16,7 +16,7 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/fillcue/parse.test.ts src/lib/fillcue/stats.test.ts src/lib/fillcue/recommend.test.ts src/lib/fillcue/ownership.test.ts src/lib/fillcue/vin.test.ts src/lib/fillcue/vehicle.test.ts src/lib/fillcue/epa.test.ts src/lib/fillcue/tank-specs.test.ts src/lib/fillcue/scan.test.ts",
+    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/app-data/readiness-schedule.test.ts src/lib/auth/gate-identity.test.ts src/lib/auth/sign-in-gate.test.ts src/lib/fillcue/parse.test.ts src/lib/fillcue/stats.test.ts src/lib/fillcue/recommend.test.ts src/lib/fillcue/ownership.test.ts src/lib/fillcue/vin.test.ts src/lib/fillcue/vehicle.test.ts src/lib/fillcue/epa.test.ts src/lib/fillcue/tank-specs.test.ts src/lib/fillcue/scan.test.ts src/lib/fillcue/pwa.test.ts",
     "lint": "eslint .",
     "format": "prettier --write ."
   },

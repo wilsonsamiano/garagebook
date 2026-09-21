@@ -1,13 +1,13 @@
 import { i as __toESM } from "../_runtime.mjs";
 import { a as Overlay2, c as Title2, d as Slot, h as require_react, i as Description2, l as Trigger2, m as require_jsx_runtime, n as Cancel, o as Portal2, r as Content2, s as Root2, t as Action } from "../_libs/@radix-ui/react-alert-dialog+[...].mjs";
-import { a as Receipt, c as Gauge, i as SlidersHorizontal, l as ChevronDown, n as Wrench, o as Plus, s as List, t as Zap, u as Camera } from "../_libs/lucide-react.mjs";
+import { a as Receipt, c as Gauge, d as Camera, i as SlidersHorizontal, l as Download, n as Wrench, o as Plus, s as List, t as Zap, u as ChevronDown } from "../_libs/lucide-react.mjs";
 import { n as toast, t as Toaster } from "../_libs/sonner.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
 import { t as Root } from "../_libs/radix-ui__react-label.mjs";
 import { n as Root$1, t as Indicator } from "../_libs/radix-ui__react-progress.mjs";
 import { t as create } from "../_libs/zustand.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-CVF623Aa.js
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-CBpfvGEX.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 function BrandMark({ className }) {
@@ -4768,6 +4768,70 @@ function EpaLookup({ vin, name, autoVin, onApply }) {
 		]
 	});
 }
+function isStandalone() {
+	if (typeof window === "undefined") return false;
+	return window.matchMedia("(display-mode: standalone)").matches || "standalone" in navigator && Boolean(navigator.standalone);
+}
+function isIos() {
+	if (typeof navigator === "undefined") return false;
+	return /iphone|ipad|ipod/i.test(navigator.userAgent);
+}
+function InstallCard() {
+	const [standalone, setStandalone] = (0, import_react.useState)(false);
+	const [promptEvent, setPromptEvent] = (0, import_react.useState)(null);
+	const [ios, setIos] = (0, import_react.useState)(false);
+	(0, import_react.useEffect)(() => {
+		setStandalone(isStandalone());
+		setIos(isIos());
+		const onPrompt = (e) => {
+			e.preventDefault();
+			setPromptEvent(e);
+		};
+		window.addEventListener("beforeinstallprompt", onPrompt);
+		return () => window.removeEventListener("beforeinstallprompt", onPrompt);
+	}, []);
+	if (standalone) return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, { children: "Installed" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDescription, { children: "GarageBook is on this device as an app. The log stays here. First OCR still needs a connection once, then receipts work offline." })] });
+	async function install() {
+		if (!promptEvent) return;
+		await promptEvent.prompt();
+		await promptEvent.userChoice;
+		setPromptEvent(null);
+		setStandalone(isStandalone());
+	}
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, { children: [
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, { children: "Install app" }),
+		/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDescription, {
+			className: "mb-3",
+			children: "Add GarageBook to the home screen. Opens full-screen, keeps the log on this device, and works offline after the first load (except VIN/EPA lookup)."
+		}),
+		promptEvent ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+			type: "button",
+			className: "gap-2",
+			onClick: () => void install(),
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Download, { className: "size-4" }), "Add to home screen"]
+		}) : ios ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+			className: "text-sm text-muted-ink",
+			children: [
+				"iPhone: tap Share, then ",
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+					className: "text-navy",
+					children: "Add to Home Screen"
+				}),
+				"."
+			]
+		}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("p", {
+			className: "text-sm text-muted-ink",
+			children: [
+				"Browser menu → ",
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("strong", {
+					className: "text-navy",
+					children: "Install app"
+				}),
+				" or Add to Home Screen."
+			]
+		})
+	] });
+}
 function SettingsView() {
 	const settings = useFillcue((s) => s.settings);
 	const vehicles = useFillcue((s) => s.vehicles);
@@ -5080,6 +5144,7 @@ function SettingsView() {
 					]
 				})
 			] }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(InstallCard, {}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Card, { children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardTitle, { children: "Ownership spreadsheet" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)(CardDescription, {

@@ -3,8 +3,8 @@ import { h as require_react, m as require_jsx_runtime } from "../_libs/@radix-ui
 import { _ as useRouter, f as createRouter, g as createRootRoute, h as createFileRoute, l as Scripts, m as lazyRouteComponent, p as Outlet, u as HeadContent } from "../_libs/@tanstack/react-router+[...].mjs";
 import { r as TriangleAlert } from "../_libs/lucide-react.mjs";
 import { a as union, i as string, n as number, r as object, t as literal } from "../_libs/zod.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-C-_qg2OX.js
-var router_C__qg2OX_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
+//#region node_modules/.nitro/vite/services/ssr/assets/router-D_KFXtAO.js
+var router_D_KFXtAO_exports = /* @__PURE__ */ __exportAll({ getRouter: () => getRouter });
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var FALLBACK_MESSAGE = "An unexpected error occurred. Try reloading the page.";
@@ -298,6 +298,13 @@ function PreviewHostBridge() {
 	}, [router]);
 	return null;
 }
+function PwaRegister() {
+	(0, import_react.useEffect)(() => {
+		if (!("serviceWorker" in navigator)) return;
+		navigator.serviceWorker.register("/sw.js").catch(() => {});
+	}, []);
+	return null;
+}
 var styles_default = "/assets/styles-WatO6vRg.css";
 var APP_NAME = "GarageBook";
 var Route$1 = createRootRoute({
@@ -322,8 +329,16 @@ var Route$1 = createRootRoute({
 				content: "yes"
 			},
 			{
+				name: "mobile-web-app-capable",
+				content: "yes"
+			},
+			{
 				name: "apple-mobile-web-app-title",
 				content: "GarageBook"
+			},
+			{
+				name: "apple-mobile-web-app-status-bar-style",
+				content: "black-translucent"
 			}
 		],
 		links: [
@@ -333,16 +348,24 @@ var Route$1 = createRootRoute({
 				href: "/favicon.svg"
 			},
 			{
-				rel: "stylesheet",
-				href: styles_default
+				rel: "apple-touch-icon",
+				href: "/apple-touch-icon.png"
 			},
 			{
 				rel: "manifest",
+				href: "/manifest.webmanifest"
+			},
+			{
+				rel: "prefetch",
 				href: "/__grok/manifest.webmanifest"
 			},
 			{
-				rel: "apple-touch-icon",
+				rel: "prefetch",
 				href: "/__grok/icon-180.png"
+			},
+			{
+				rel: "stylesheet",
+				href: styles_default
 			}
 		]
 	}),
@@ -351,12 +374,13 @@ var Route$1 = createRootRoute({
 		suppressHydrationWarning: true,
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("head", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(HeadContent, {}) }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("body", { children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PreviewHostBridge, {}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(PwaRegister, {}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(AuthProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {}) }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Scripts, {})
 		] })]
 	})
 });
-var $$splitComponentImporter = () => import("./routes-CVF623Aa.mjs");
+var $$splitComponentImporter = () => import("./routes-CBpfvGEX.mjs");
 var rootRouteChildren = { IndexRoute: createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") }).update({
 	id: "/",
 	path: "/",
@@ -370,4 +394,4 @@ function getRouter() {
 	});
 }
 //#endregion
-export { getRouter, router_C__qg2OX_exports as t };
+export { getRouter, router_D_KFXtAO_exports as t };
