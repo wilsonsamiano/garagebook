@@ -200,7 +200,7 @@ export function SettingsView() {
         <CardTitle>This vehicle</CardTitle>
         <CardDescription className="mb-3">Name, VIN, tank, and the dates used for lifetime cost.</CardDescription>
         <form
-          className="grid grid-cols-2 gap-2.5"
+          className="grid grid-cols-2 gap-2.5 [&>*]:min-w-0"
           onSubmit={async (e) => {
             e.preventDefault();
             await saveSettings(form);
@@ -267,11 +267,11 @@ export function SettingsView() {
               EV has no tank or MPG. Log Supercharger and home charging for kWh, and shop visits for tires and brakes.
             </p>
           )}
-          <label className="flex flex-col gap-1">
+          <label className="col-span-2 flex min-w-0 flex-col gap-1">
             <Label>Owned since</Label>
             <Input type="date" value={form.ownedSince} onChange={(e) => patch("ownedSince", e.target.value)} />
           </label>
-          <label className="flex flex-col gap-1">
+          <label className="col-span-2 flex min-w-0 flex-col gap-1">
             <Label>Odo at purchase</Label>
             <Input
               inputMode="numeric"
@@ -377,7 +377,7 @@ function NumField({
   className?: string;
 }) {
   return (
-    <label className={`flex flex-col gap-1 ${className ?? ""}`}>
+    <label className={`flex min-w-0 flex-col gap-1 ${className ?? ""}`}>
       <Label>{label}</Label>
       <Input
         type="number"

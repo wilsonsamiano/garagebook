@@ -6,7 +6,10 @@ Successor to [FillCue](https://github.com/wilsonsamiano/fillcue).
 
 ## Live app
 
-**[Open GarageBook](https://wilsonsamiano.github.io/garagebook/)** — then install it as a PWA:
+- **Grok:** [garagebook.grok.me](https://garagebook.grok.me)
+- **GitHub Pages:** [wilsonsamiano.github.io/garagebook](https://wilsonsamiano.github.io/garagebook/)
+
+Then install it as a PWA:
 
 | Device | How |
 | --- | --- |

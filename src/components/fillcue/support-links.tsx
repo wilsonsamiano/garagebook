@@ -1,9 +1,10 @@
-import { Coffee, Github, Globe } from "lucide-react";
+import { Coffee, Github, Globe, Sparkles } from "lucide-react";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { APP_LINKS } from "@/lib/fillcue/links";
 
 const items = [
-  { href: APP_LINKS.live, label: "Open live app", icon: Globe, gold: false },
+  { href: APP_LINKS.grok, label: "Open Grok app", icon: Sparkles, gold: false },
+  { href: APP_LINKS.live, label: "Open GitHub Pages", icon: Globe, gold: false },
   { href: APP_LINKS.github, label: "GitHub", icon: Github, gold: false },
   { href: APP_LINKS.coffee, label: "Buy me a coffee", icon: Coffee, gold: true },
 ] as const;
@@ -13,7 +14,7 @@ export function SupportLinks() {
     <Card>
       <CardTitle>Web app</CardTitle>
       <CardDescription className="mb-3">
-        GarageBook is free. Open it on any phone, then install from the live site.
+        GarageBook is free. Use either live site, then install it to the home screen.
       </CardDescription>
       <div className="grid gap-2">
         {items.map((item) => {
@@ -36,7 +37,8 @@ export function SupportLinks() {
           );
         })}
       </div>
-      <p className="mt-2 text-center text-xs text-muted-ink">{APP_LINKS.live.replace(/^https:\/\//, "")}</p>
+      <p className="mt-2 text-center text-xs text-muted-ink">{APP_LINKS.grok.replace(/^https:\/\//, "")}</p>
+      <p className="text-center text-xs text-muted-ink">{APP_LINKS.live.replace(/^https:\/\//, "")}</p>
     </Card>
   );
 }

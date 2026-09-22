@@ -80,10 +80,18 @@ export function InstallCard() {
         </p>
       )}
       <a
-        href={APP_LINKS.live}
+        href={APP_LINKS.grok}
         target="_blank"
         rel="noopener noreferrer"
         className="mt-3 block text-center text-xs text-navy underline-offset-2 hover:underline"
+      >
+        {APP_LINKS.grok.replace(/^https:\/\//, "")}
+      </a>
+      <a
+        href={APP_LINKS.live}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-1 block text-center text-xs text-navy underline-offset-2 hover:underline"
       >
         {APP_LINKS.live.replace(/^https:\/\//, "")}
       </a>
