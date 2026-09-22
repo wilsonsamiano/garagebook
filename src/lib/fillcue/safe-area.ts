@@ -1,5 +1,5 @@
-/** iPhone Dynamic Island + iOS 27 Liquid Glass. env() is often 0. */
-export const IOS_GLASS_TOP_MIN = 132;
+/** Measured inset; 0 when iOS already letterboxes the webview. */
+export const IOS_GLASS_TOP_MIN = 0;
 
 export function isAppleTouch(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -20,11 +20,8 @@ export function measureInset(prop: "top" | "bottom"): number {
 export function applySafeArea(): void {
   if (typeof document === "undefined") return;
   const envTop = measureInset("top");
-  const needMin =
-    isAppleTouch() || (typeof window !== "undefined" && window.matchMedia("(max-width: 480px)").matches);
-  const top = Math.max(envTop, needMin ? IOS_GLASS_TOP_MIN : 0);
-  if (top > 0) {
-    document.documentElement.style.setProperty("--app-safe-top", `${top}px`);
+  if (envTop > 0) {
+    document.documentElement.style.setProperty("--app-safe-top", `${envTop}px`);
   } else {
     document.documentElement.style.removeProperty("--app-safe-top");
   }

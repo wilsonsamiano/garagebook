@@ -92,7 +92,7 @@ export function Home() {
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
-      <header className="relative bg-navy-deep text-cream pt-3 max-[480px]:pt-[132px]">
+      <header className="relative bg-navy-deep text-cream pt-[max(0.75rem,env(safe-area-inset-top,0px))]">
         <div className="flex items-center justify-between pb-3 pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
           <div className="flex items-center gap-2.5">
             <BrandMark className="size-9 text-gold" />
