@@ -1,5 +1,5 @@
 /** iPhone Dynamic Island + iOS 27 Liquid Glass. env() is often 0. */
-export const IOS_GLASS_TOP_MIN = 72;
+export const IOS_GLASS_TOP_MIN = 110;
 
 export function isAppleTouch(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -28,4 +28,17 @@ export function applySafeArea(): void {
   } else {
     document.documentElement.style.removeProperty("--app-safe-top");
   }
+}
+
+/** Drops Cache Storage + the service worker. IndexedDB (the log) is not touched. */
+export async function reloadAppFiles(): Promise<void> {
+  if (typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(regs.map((r) => r.unregister()));
+  }
+  if (typeof caches !== "undefined") {
+    const keys = await caches.keys();
+    await Promise.all(keys.map((k) => caches.delete(k)));
+  }
+  window.location.reload();
 }

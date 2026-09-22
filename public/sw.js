@@ -1,5 +1,5 @@
 /* GarageBook service worker — app shell + OCR engine. Logs stay in IndexedDB. */
-const CACHE = "garagebook-v3";
+const CACHE = "garagebook-v4";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -27,6 +27,10 @@ self.addEventListener("activate", (event) => {
       .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()),
   );
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") self.skipWaiting();
 });
 
 function shouldBypass(url) {
@@ -95,7 +99,7 @@ async function staleWhileRevalidate(req) {
 
 async function networkFirst(req) {
   try {
-    const res = await fetch(req);
+    const res = await fetch(req, { cache: "no-store" });
     if (res.ok) {
       const cache = await caches.open(CACHE);
       await cache.put(req, res.clone());

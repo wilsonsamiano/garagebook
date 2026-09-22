@@ -93,7 +93,10 @@ export function Home() {
   return (
     <div className="min-h-dvh bg-paper text-ink">
       <header className="sticky top-0 z-20 bg-linear-to-b from-navy-deep to-navy text-cream">
-        <div className="h-[var(--app-safe-top)] w-full shrink-0" aria-hidden="true" />
+        <div
+          className="h-[var(--app-safe-top)] min-h-0 w-full shrink-0 max-[480px]:min-h-[110px]"
+          aria-hidden="true"
+        />
         <div className="flex items-center justify-between py-3 pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
           <div className="flex items-center gap-2.5">
             <BrandMark className="size-9 text-gold" />

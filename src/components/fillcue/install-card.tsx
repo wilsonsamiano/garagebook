@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
-import { Download } from "lucide-react";
+import { Download, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
 import { APP_LINKS } from "@/lib/fillcue/links";
+import { reloadAppFiles } from "@/lib/fillcue/safe-area";
 
 type BeforeInstallPrompt = Event & {
   prompt: () => Promise<void>;
@@ -42,10 +43,18 @@ export function InstallCard() {
     return (
       <Card>
         <CardTitle>Installed</CardTitle>
-        <CardDescription>
+        <CardDescription className="mb-3">
           GarageBook is on this device as an app. The log stays here. First OCR still needs a connection
           once, then receipts work offline.
         </CardDescription>
+        <Button type="button" variant="outline" className="gap-2" onClick={() => void reloadAppFiles()}>
+          <RefreshCw className="size-4" />
+          Reload app files
+        </Button>
+        <p className="mt-2 text-xs text-muted-ink">
+          Updates icons and layout. Does not delete fills, charges, or scans. On iPhone, also delete the
+          Home Screen icon and add it again after this reload.
+        </p>
       </Card>
     );
   }
