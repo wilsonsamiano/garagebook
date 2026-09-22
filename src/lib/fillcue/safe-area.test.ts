@@ -9,10 +9,11 @@ describe("iOS safe area", () => {
     const header = readFileSync(new URL("../../../src/routes/index.tsx", import.meta.url), "utf8");
     const tabs = readFileSync(new URL("../../../src/components/fillcue/tab-bar.tsx", import.meta.url), "utf8");
     assert.match(css, /--app-safe-top/);
-    assert.match(css, /max\(110px, env\(safe-area-inset-top/);
-    assert.match(header, /min-h-\[110px\]/);
+    assert.match(css, /max\(132px, env\(safe-area-inset-top/);
+    assert.match(header, /max-\[480px\]:pt-\[132px\]/);
+    assert.doesNotMatch(header, /sticky top-0/);
     assert.match(tabs, /pb-\[var\(--app-safe-bottom\)\]/);
-    assert.equal(IOS_GLASS_TOP_MIN, 110);
+    assert.equal(IOS_GLASS_TOP_MIN, 132);
     assert.equal(isAppleTouch(), false);
   });
 });

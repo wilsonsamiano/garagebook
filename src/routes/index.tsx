@@ -92,18 +92,12 @@ export function Home() {
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
-      <header className="sticky top-0 z-20 bg-linear-to-b from-navy-deep to-navy text-cream">
-        <div
-          className="h-[var(--app-safe-top)] min-h-0 w-full shrink-0 max-[480px]:min-h-[110px]"
-          aria-hidden="true"
-        />
-        <div className="flex items-center justify-between py-3 pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
+      <header className="relative bg-navy-deep text-cream pt-3 max-[480px]:pt-[132px]">
+        <div className="flex items-center justify-between pb-3 pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
           <div className="flex items-center gap-2.5">
             <BrandMark className="size-9 text-gold" />
             <div>
-              <h1 className="font-display text-lg leading-tight font-semibold drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]">
-                GarageBook
-              </h1>
+              <h1 className="font-display text-lg leading-tight font-semibold">GarageBook</h1>
               <VehicleSwitcher />
             </div>
           </div>

@@ -70,13 +70,13 @@
 
 @media (max-width: 480px) {
   :root {
-    --app-safe-top: max(110px, env(safe-area-inset-top, 0px));
+    --app-safe-top: max(132px, env(safe-area-inset-top, 0px));
   }
 }
 
 @media (display-mode: standalone) and (max-width: 1024px) {
   :root {
-    --app-safe-top: max(110px, env(safe-area-inset-top, 0px));
+    --app-safe-top: max(132px, env(safe-area-inset-top, 0px));
   }
 }
 

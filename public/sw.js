@@ -1,5 +1,5 @@
 /* GarageBook service worker — app shell + OCR engine. Logs stay in IndexedDB. */
-const CACHE = "garagebook-v4";
+const CACHE = "garagebook-v5";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

@@ -1,5 +1,5 @@
 /** iPhone Dynamic Island + iOS 27 Liquid Glass. env() is often 0. */
-export const IOS_GLASS_TOP_MIN = 110;
+export const IOS_GLASS_TOP_MIN = 132;
 
 export function isAppleTouch(): boolean {
   if (typeof navigator === "undefined") return false;
