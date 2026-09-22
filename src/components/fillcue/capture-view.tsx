@@ -126,16 +126,16 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
 
       <Card>
         <form
-          className="grid grid-cols-2 gap-2.5"
+          className="grid grid-cols-2 gap-2.5 [&>*]:min-w-0"
           onSubmit={(e) => {
             e.preventDefault();
             void onSave();
           }}
         >
-          <Field label="Date">
+          <Field label="Date" className="col-span-2">
             <Input type="date" required value={draft.date} onChange={(e) => setDraft({ date: e.target.value })} />
           </Field>
-          <Field label="Time">
+          <Field label="Time" className="col-span-2">
             <Input type="time" value={draft.time} onChange={(e) => setDraft({ time: e.target.value })} />
           </Field>
           <Field label="Station">
@@ -287,13 +287,13 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
 
       <Card>
         <form
-          className="grid grid-cols-2 gap-2.5"
+          className="grid grid-cols-2 gap-2.5 [&>*]:min-w-0"
           onSubmit={(e) => {
             e.preventDefault();
             void onSave();
           }}
         >
-          <Field label="Date">
+          <Field label="Date" className="col-span-2">
             <Input type="date" required value={draft.date} onChange={(e) => setDraft({ date: e.target.value })} />
           </Field>
           <Field label="Status">
@@ -328,7 +328,7 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
           <Field label="What was done" className="col-span-2">
             <Input value={draft.summary} onChange={(e) => setDraft({ summary: e.target.value })} />
           </Field>
-          <Field label="Due date">
+          <Field label="Due date" className="col-span-2">
             <Input type="date" value={draft.dueDate} onChange={(e) => setDraft({ dueDate: e.target.value })} />
           </Field>
           <Field label="Due miles">
@@ -423,16 +423,16 @@ function ChargeForm({ onTab }: { onTab: (t: TabId) => void }) {
 
       <Card>
         <form
-          className="grid grid-cols-2 gap-2.5"
+          className="grid grid-cols-2 gap-2.5 [&>*]:min-w-0"
           onSubmit={(e) => {
             e.preventDefault();
             void onSave();
           }}
         >
-          <Field label="Date">
+          <Field label="Date" className="col-span-2">
             <Input type="date" required value={draft.date} onChange={(e) => setDraft({ date: e.target.value })} />
           </Field>
-          <Field label="Time">
+          <Field label="Time" className="col-span-2">
             <Input type="time" value={draft.time} onChange={(e) => setDraft({ time: e.target.value })} />
           </Field>
           <Field label="Where">
@@ -531,7 +531,7 @@ function Field({
   className?: string;
 }) {
   return (
-    <label className={`flex flex-col gap-1 ${className ?? ""}`}>
+    <label className={`flex min-w-0 flex-col gap-1 ${className ?? ""}`}>
       <Label>{label}</Label>
       {children}
     </label>
