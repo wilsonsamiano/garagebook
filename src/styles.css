@@ -56,6 +56,18 @@
   }
 }
 
+/*
+  iOS 26/27 Liquid Glass sits on the status bar and home indicator and
+  bleeds a few pixels past env(safe-area-inset-*). App chrome uses these
+  instead of raw insets.
+*/
+:root {
+  --app-safe-top: calc(env(safe-area-inset-top, 0px) + 0.75rem + 8px);
+  --app-safe-bottom: max(0.5rem, calc(env(safe-area-inset-bottom, 0px) + 4px));
+  --app-safe-left: max(1rem, env(safe-area-inset-left, 0px));
+  --app-safe-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
 .ocr-box {
   background: var(--color-cluster);
   color: #d5e0ea;

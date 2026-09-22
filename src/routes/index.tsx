@@ -92,7 +92,7 @@ export function Home() {
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
-      <header className="sticky top-0 z-20 flex items-center justify-between bg-linear-to-b from-navy-deep to-navy px-4 py-3 text-cream">
+      <header className="sticky top-0 z-20 flex items-center justify-between bg-linear-to-b from-navy-deep to-navy pb-3 text-cream pt-[var(--app-safe-top)] pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
         <div className="flex items-center gap-2.5">
           <BrandMark className="size-9 text-gold" />
           <div>

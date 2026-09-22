@@ -11,7 +11,7 @@ const TABS: { id: TabId; label: string; icon: typeof Gauge }[] = [
 
 export function TabBar({ tab, onChange }: { tab: TabId; onChange: (t: TabId) => void }) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-card/95 pb-[max(8px,env(safe-area-inset-bottom))] backdrop-blur-sm">
+    <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-line bg-card/95 pb-[var(--app-safe-bottom)] backdrop-blur-sm">
       {TABS.map((item) => {
         const Icon = item.icon;
         const active = tab === item.id;
