@@ -9,7 +9,7 @@ describe("GarageBook PWA", () => {
   it("is named GarageBook and standalone", () => {
     assert.equal(manifest.name, "GarageBook");
     assert.equal(manifest.display, "standalone");
-    assert.equal(manifest.start_url, "/");
+    assert.equal(manifest.start_url, "./");
     assert.equal(manifest.theme_color, "#1B365D");
   });
 
@@ -21,7 +21,7 @@ describe("GarageBook PWA", () => {
   });
 
   it("caches the app shell and Tesseract, not EPA", () => {
-    assert.match(sw, /garagebook-v1/);
+    assert.match(sw, /garagebook-v2/);
     assert.match(sw, /tesseract/);
     assert.match(sw, /fueleconomy\.gov/);
     assert.match(sw, /shouldBypass/);

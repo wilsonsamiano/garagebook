@@ -19,7 +19,7 @@ import { useFillcue, type TabId } from "@/store/fillcue-store";
 
 export const Route = createFileRoute("/")({ component: Home });
 
-function Home() {
+export function Home() {
   const hydrate = useFillcue((s) => s.hydrate);
   const ready = useFillcue((s) => s.ready);
   const error = useFillcue((s) => s.error);

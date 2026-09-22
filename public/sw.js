@@ -1,21 +1,22 @@
 /* GarageBook service worker — app shell + OCR engine. Logs stay in IndexedDB. */
-const CACHE = "garagebook-v1";
-const PRECACHE = [
-  "/",
-  "/manifest.webmanifest",
-  "/favicon.svg",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/icon-512-maskable.png",
-  "/apple-touch-icon.png",
-];
+const CACHE = "garagebook-v2";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE)
-      .then((cache) => cache.addAll(PRECACHE).catch(() => undefined))
-      .then(() => self.skipWaiting()),
+    (async () => {
+      const cache = await caches.open(CACHE);
+      const files = [
+        "./",
+        "./manifest.webmanifest",
+        "./favicon.svg",
+        "./icon-192.png",
+        "./icon-512.png",
+        "./icon-512-maskable.png",
+        "./apple-touch-icon.png",
+      ].map((p) => new URL(p, self.registration.scope).href);
+      await cache.addAll(files).catch(() => undefined);
+      await self.skipWaiting();
+    })(),
   );
 });
 
@@ -104,7 +105,7 @@ async function networkFirst(req) {
     const cached = await caches.match(req);
     if (cached) return cached;
     if (req.mode === "navigate") {
-      const home = await caches.match("/");
+      const home = await caches.match(new URL("./", self.registration.scope).href);
       if (home) return home;
     }
     return new Response("GarageBook is offline and this page is not cached yet.", {
