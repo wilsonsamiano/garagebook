@@ -92,24 +92,29 @@ export function Home() {
 
   return (
     <div className="min-h-dvh bg-paper text-ink">
-      <header className="sticky top-0 z-20 flex items-center justify-between bg-linear-to-b from-navy-deep to-navy pb-3 text-cream pt-[var(--app-safe-top)] pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
-        <div className="flex items-center gap-2.5">
-          <BrandMark className="size-9 text-gold" />
-          <div>
-            <h1 className="font-display text-lg leading-tight font-semibold">GarageBook</h1>
-            <VehicleSwitcher />
+      <header className="sticky top-0 z-20 bg-linear-to-b from-navy-deep to-navy text-cream">
+        <div className="h-[var(--app-safe-top)] w-full shrink-0" aria-hidden="true" />
+        <div className="flex items-center justify-between py-3 pl-[var(--app-safe-left)] pr-[var(--app-safe-right)]">
+          <div className="flex items-center gap-2.5">
+            <BrandMark className="size-9 text-gold" />
+            <div>
+              <h1 className="font-display text-lg leading-tight font-semibold drop-shadow-[0_1px_1px_rgba(0,0,0,0.65)]">
+                GarageBook
+              </h1>
+              <VehicleSwitcher />
+            </div>
           </div>
+          <Button
+            type="button"
+            variant="cream"
+            size="sm"
+            className="h-10 border border-cream/35 bg-transparent text-cream hover:bg-cream/10"
+            onClick={goCaptureNew}
+          >
+            <Plus className="size-4" />
+            Add
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="cream"
-          size="sm"
-          className="h-10 border border-cream/35 bg-transparent text-cream hover:bg-cream/10"
-          onClick={goCaptureNew}
-        >
-          <Plus className="size-4" />
-          Add
-        </Button>
       </header>
 
       <main className="mx-auto max-w-xl px-4 pt-4 pb-28">

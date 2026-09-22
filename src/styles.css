@@ -57,15 +57,27 @@
 }
 
 /*
-  iOS 26/27 Liquid Glass sits on the status bar and home indicator and
-  bleeds a few pixels past env(safe-area-inset-*). App chrome uses these
-  instead of raw insets.
+  iOS 26/27 Liquid Glass overlays the status bar even when
+  env(safe-area-inset-top) is 0 (WebKit 301994 / 317153).
+  Phone layouts use a 72px floor so the title sits below the clock.
 */
 :root {
-  --app-safe-top: calc(env(safe-area-inset-top, 0px) + 0.75rem + 8px);
+  --app-safe-top: env(safe-area-inset-top, 0px);
   --app-safe-bottom: max(0.5rem, calc(env(safe-area-inset-bottom, 0px) + 4px));
   --app-safe-left: max(1rem, env(safe-area-inset-left, 0px));
   --app-safe-right: max(1rem, env(safe-area-inset-right, 0px));
+}
+
+@media (max-width: 480px) {
+  :root {
+    --app-safe-top: max(72px, env(safe-area-inset-top, 0px));
+  }
+}
+
+@media (display-mode: standalone) and (max-width: 1024px) {
+  :root {
+    --app-safe-top: max(72px, env(safe-area-inset-top, 0px));
+  }
 }
 
 .ocr-box {
