@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardDescription, CardTitle } from "@/components/ui/card";
+import { APP_LINKS } from "@/lib/fillcue/links";
 
 type BeforeInstallPrompt = Event & {
   prompt: () => Promise<void>;
@@ -78,6 +79,14 @@ export function InstallCard() {
           Browser menu → <strong className="text-navy">Install app</strong> or Add to Home Screen.
         </p>
       )}
+      <a
+        href={APP_LINKS.live}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 block text-center text-xs text-navy underline-offset-2 hover:underline"
+      >
+        {APP_LINKS.live.replace(/^https:\/\//, "")}
+      </a>
     </Card>
   );
 }

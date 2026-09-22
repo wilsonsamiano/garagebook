@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { EpaLookup } from "@/components/fillcue/epa-lookup";
 import { InstallCard } from "@/components/fillcue/install-card";
 import { Segmented } from "@/components/fillcue/segmented";
+import { SupportLinks } from "@/components/fillcue/support-links";
 import { DUE_DISCLAIMER_FULL } from "@/lib/fillcue/recommend";
 import {
   POWERTRAIN_OPTIONS,
@@ -359,19 +360,7 @@ export function SettingsView() {
         </CardDescription>
       </Card>
 
-      <Card>
-        <CardTitle>Support</CardTitle>
-        <CardDescription className="mb-3">GarageBook is free. Coffee keeps the side projects going.</CardDescription>
-        <a
-          href="https://buymeacoffee.com/wilsonsamiano"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-11 w-full items-center justify-center rounded-md bg-gold text-sm font-medium text-navy-deep"
-        >
-          Buy me a coffee
-        </a>
-        <p className="mt-2 text-center text-xs text-muted-ink">buymeacoffee.com/wilsonsamiano</p>
-      </Card>
+      <SupportLinks />
     </div>
   );
 }
