@@ -78,6 +78,35 @@ TOTAL PURCHASES $60.01
   it("keeps the sale total", () => assert.equal(parsed.total, 60.01));
 });
 
+describe("faint pump decimals", () => {
+  const spaced = parseReceipt(`
+UNLEADED
+13 459
+4 459
+TOTAL PURCHASES $60.01
+`);
+  const stuck = parseReceipt(`
+1 UNLEADED 13459 4459
+TOTAL PURCHASES $60.01
+`);
+  const commas = parseReceipt(`
+GALLONS 13,459
+PPG 4,459
+TOTAL PURCHASES $60.01
+`);
+
+  it("joins a missing dot in gallons", () => assert.equal(spaced.gallons, 13.459));
+  it("joins a missing dot in price", () => assert.equal(spaced.pricePerGal, 4.459));
+  it("splits stuck digits on the unleaded line", () => {
+    assert.equal(stuck.gallons, 13.459);
+    assert.equal(stuck.pricePerGal, 4.459);
+  });
+  it("treats commas as decimal points", () => {
+    assert.equal(commas.gallons, 13.459);
+    assert.equal(commas.pricePerGal, 4.459);
+  });
+});
+
 describe("parseCluster", () => {
   const c = parseCluster(cluster);
   it("reads odometer", () => assert.equal(c.odometer, 112468));

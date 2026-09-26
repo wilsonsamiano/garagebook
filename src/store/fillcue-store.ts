@@ -620,6 +620,7 @@ export const useFillcue = create<GarageState>((set, get) => ({
         });
       } else {
         const parsed = mergeParse(parseReceipt(rec.text), parseCluster(cluster.text), draft);
+        const missingPump = !parsed.gallons || !parsed.pricePerGal;
         set({
           receipt: { text: rec.text, preview: scan },
           draft: parsed,
@@ -627,9 +628,11 @@ export const useFillcue = create<GarageState>((set, get) => ({
           ocrProgress: 100,
           ocrStatus:
             readNote ||
-            (kind === "unknown"
-              ? "Could not tell receipt from cluster — check the fields."
-              : "Check the fields before saving. Scan stays on this device."),
+            (missingPump
+              ? "Got the station and total. The gallons and price line was too faint, so those boxes were left empty. Check Raw OCR, then type them."
+              : kind === "unknown"
+                ? "Could not tell receipt from cluster — check the fields."
+                : "Check the fields before saving. Scan stays on this device."),
           ocrBusy: false,
         });
       }

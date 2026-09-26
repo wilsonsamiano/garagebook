@@ -73,6 +73,27 @@ export type ChargeParse = {
   odometer: number | null;
 };
 
+function normalizeReceiptText(text: string): string {
+  const cleaned = text
+    .replace(/[\u00a0\u2000-\u200b\u202f]/g, " ")
+    .replace(/[·∙•]/g, ".")
+    .replace(/(\d)\s*[.]\s*(\d)/g, "$1.$2")
+    .replace(/(\d)\s*,\s*(\d{3})\b/g, "$1.$2");
+  return cleaned
+    .split("\n")
+    .map((line) => {
+      const fuel = /gal|ppg|unlead|\bamt\b|fuel/i.test(line);
+      let next = line.replace(/(\d{1,2})\s+(\d{3})\b/g, "$1.$2");
+      if (!fuel) return next;
+      next = next.replace(/\b(\d{2})(\d{3})\b/g, "$1.$2");
+      next = next.replace(/\b(\d)(\d{3})\b/g, "$1.$2");
+      return next;
+    })
+    .join("\n")
+    .replace(/(\d{1,3}\.\d{3})(?=\d\.\d{3})/g, "$1 ")
+    .replace(/(\d\.\d{3})(?=\d{1,3}\.\d{2})/g, "$1 ");
+}
+
 function fuelTriple(text: string): { gal: number; ppg: number; total: number } | null {
   const found = [...text.matchAll(/\$?\s*(\d{1,3}\.\d{2,4})/g)].map((m) => Number(m[1]));
   const unique = [...new Set(found.map((n) => Math.round(n * 10000) / 10000))];
@@ -145,10 +166,18 @@ function fillFuelNumbers(text: string, out: ReceiptParse) {
       if (out.total == null) out.total = hit.total;
     }
   }
+  if (out.total != null && out.gallons != null && out.pricePerGal == null) {
+    const ppg = out.total / out.gallons;
+    if (ppg >= 1.5 && ppg <= 9.5) out.pricePerGal = Math.round(ppg * 1000) / 1000;
+  }
+  if (out.total != null && out.pricePerGal != null && out.gallons == null) {
+    const gal = out.total / out.pricePerGal;
+    if (gal >= 0.4 && gal <= 40) out.gallons = Math.round(gal * 1000) / 1000;
+  }
 }
 
 export function parseReceipt(text: string): ReceiptParse {
-  const t = clean(text);
+  const t = normalizeReceiptText(clean(text));
   const out: ReceiptParse = {
     kind: "receipt",
     station: "",

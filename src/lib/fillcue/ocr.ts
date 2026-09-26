@@ -1,3 +1,5 @@
+import { parseReceipt } from "@/lib/fillcue/parse";
+
 type TessLogger = { status: string; progress: number };
 
 type TessWorker = {
@@ -281,11 +283,11 @@ export async function recognizeFile(
       const embedded = await withTimeout(pdfText(doc), 12000, slow);
       const page = await withTimeout(renderPdfPage(await doc.getPage(1)), 20000, slow);
       const canvas = drawForOcr(page, page.width, page.height, mode);
-      const uniqueDecimals = new Set(embedded.match(/\d+\.\d{2,4}/g) || []);
-      if (uniqueDecimals.size >= 3) {
+      const parsed = parseReceipt(embedded);
+      if (parsed.gallons != null && parsed.pricePerGal != null) {
         return { text: embedded, confidence: 95, canvas };
       }
-      onProgress?.("Scanning the page for gallons and price…");
+      onProgress?.("Scanning the pump line for gallons and price…");
       const worker = await withTimeout(ensureOcr(onProgress), 60000, "Could not start the reader. Connect once, then try again.");
       await worker.setParameters({
         tessedit_pageseg_mode: "6",

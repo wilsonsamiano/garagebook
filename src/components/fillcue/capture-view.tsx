@@ -124,6 +124,14 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
         </div>
       </Card>
 
+      {(receipt.text || cluster.text) && (
+        <Card>
+          <CardTitle>What was read</CardTitle>
+          {receipt.text ? <pre className="ocr-box mb-2">{receipt.text.trim()}</pre> : null}
+          {cluster.text ? <pre className="ocr-box">{cluster.text.trim()}</pre> : null}
+        </Card>
+      )}
+
       <Card>
         <form
           className="grid grid-cols-2 gap-2.5 [&>*]:min-w-0"
@@ -220,14 +228,6 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
           </div>
         </form>
       </Card>
-
-      {(receipt.text || cluster.text) && (
-        <Card>
-          <CardTitle>Raw OCR</CardTitle>
-          {receipt.text ? <pre className="ocr-box mb-2">{receipt.text.trim()}</pre> : null}
-          {cluster.text ? <pre className="ocr-box">{cluster.text.trim()}</pre> : null}
-        </Card>
-      )}
     </>
   );
 }
