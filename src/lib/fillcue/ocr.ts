@@ -1,4 +1,4 @@
-/** On-device OCR via Tesseract.js. Photos never leave the device. */
+import { applyDocumentScan } from "@/lib/fillcue/scan";
 
 type TessLogger = { status: string; progress: number };
 
@@ -69,7 +69,8 @@ export async function ensureOcr(onProgress?: (msg: string) => void): Promise<Tes
 
 export function preprocessImage(
   file: File,
-  maxW = 1600,
+  mode: "document" | "cluster" = "document",
+  maxW = 1800,
 ): Promise<{ canvas: HTMLCanvasElement }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -96,6 +97,7 @@ export function preprocessImage(
         y = Math.max(0, Math.min(255, y));
         d[i] = d[i + 1] = d[i + 2] = y;
       }
+      if (mode === "document") applyDocumentScan(d);
       ctx.putImageData(data, 0, 0);
       URL.revokeObjectURL(url);
       resolve({ canvas });
@@ -111,10 +113,16 @@ export function preprocessImage(
 export async function recognizeFile(
   file: File,
   onProgress?: (msg: string) => void,
+  mode: "document" | "cluster" = "document",
 ): Promise<{ text: string; confidence: number; canvas: HTMLCanvasElement }> {
-  const pre = await preprocessImage(file);
+  const pre = await preprocessImage(file, mode);
   const worker = await ensureOcr(onProgress);
-  onProgress?.("Reading photo…");
+  await worker.setParameters({
+    tessedit_pageseg_mode: mode === "cluster" ? "11" : "6",
+    tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#.,:$/°%+- ",
+    preserve_interword_spaces: "1",
+  });
+  onProgress?.("Reading scan…");
   const result = await worker.recognize(pre.canvas);
   return {
     text: result.data?.text || "",

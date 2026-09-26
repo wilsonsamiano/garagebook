@@ -128,25 +128,25 @@ export function HomeView({
       <Card>
         <CardTitle>Capture</CardTitle>
         <CardDescription className="mb-3">
-          Photos stay on this device as a small B&W scan. OCR is a draft — you own the save.
+          Tap a button, then Scan Documents on iPhone — the same page scanner as Preview. A regular camera photo reads worse.
         </CardDescription>
         <div className="grid grid-cols-2 gap-2.5">
           {burnsFuel(powertrain) ? (
-            <FileButton label="Fuel receipt" icon={<Receipt />} onFile={(f) => onPick("receipt", f)} />
+            <FileButton label="Scan fuel receipt" icon={<Receipt />} onFile={(f) => onPick("receipt", f)} />
           ) : null}
           {plugsIn(powertrain) ? (
-            <FileButton label="Charge receipt" gold icon={<Zap />} onFile={(f) => onPick("charge", f)} />
+            <FileButton label="Scan charge" gold icon={<Zap />} onFile={(f) => onPick("charge", f)} />
           ) : null}
           {burnsFuel(powertrain) ? (
             <FileButton
-              label="Cluster"
+              label="Scan cluster"
               gold={!plugsIn(powertrain)}
               icon={<Camera />}
               onFile={(f) => onPick("cluster", f)}
             />
           ) : null}
           <FileButton
-            label="Shop receipt"
+            label="Scan shop receipt"
             icon={<Wrench />}
             onFile={(f) => onPick("shop", f)}
             className={burnsFuel(powertrain) && !plugsIn(powertrain) ? "col-span-2" : undefined}
@@ -190,7 +190,6 @@ function FileButton({
       <input
         type="file"
         accept="image/*"
-        capture="environment"
         className="sr-only"
         onChange={(e) => {
           const f = e.target.files?.[0];

@@ -102,7 +102,8 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Review before save</CardTitle>
         <CardDescription className="mb-3">
-          OCR is a draft. Check gallons, price, and odometer. Photos are stored as a small B&W scan on this device.
+          On iPhone, tap Scan, then <strong className="text-navy">Scan Documents</strong>. That is the same
+          page scanner as Preview — not a regular photo. Check gallons, price, and odometer before you save.
         </CardDescription>
         <div className="grid grid-cols-2 gap-2">
           <ScanTile src={receipt.preview} caption="Receipt" />
@@ -111,8 +112,8 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
         <Progress value={ocrProgress} className="mt-3" />
         <p className="mt-2 text-sm text-muted-ink">{ocrBusy ? "Working…" : ocrStatus}</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
-          <FileChip label="Receipt" onFile={(f) => onPick("receipt", f)} icon={<Receipt className="size-4" />} />
-          <FileChip label="Cluster" gold onFile={(f) => onPick("cluster", f)} icon={<Camera className="size-4" />} />
+          <FileChip label="Scan receipt" onFile={(f) => onPick("receipt", f)} icon={<Receipt className="size-4" />} />
+          <FileChip label="Scan cluster" gold onFile={(f) => onPick("cluster", f)} icon={<Camera className="size-4" />} />
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={() => applyOcrText(SAMPLE_RECEIPT, "receipt")}>
@@ -270,13 +271,13 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Shop receipt</CardTitle>
         <CardDescription className="mb-3">
-          Snap the invoice. OCR drafts shop, miles, total, and the work done. A B&W scan is kept with the log.
+          Tap Scan, then Scan Documents on iPhone (same scanner as Preview). OCR drafts shop, miles, and total.
         </CardDescription>
         <ScanTile src={preview} caption="Shop receipt" />
         <Progress value={ocrProgress} className="mt-3" />
         <p className="mt-2 text-sm text-muted-ink">{ocrBusy ? "Working…" : ocrStatus}</p>
         <div className="mt-3">
-          <FileChip label="Shop receipt" gold onFile={onPick} icon={<Wrench className="size-4" />} />
+          <FileChip label="Scan shop receipt" gold onFile={onPick} icon={<Wrench className="size-4" />} />
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={() => applyOcrText(SAMPLE_SHOP, "shop")}>
@@ -406,13 +407,13 @@ function ChargeForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Charge receipt</CardTitle>
         <CardDescription className="mb-3">
-          Snap a Supercharger or wall-connector receipt. A B&W scan is kept with the log. Nothing is uploaded.
+          Tap Scan, then Scan Documents on iPhone. A B&W scan stays on this device. Nothing is uploaded.
         </CardDescription>
         <ScanTile src={preview} caption="Charge receipt" />
         <Progress value={ocrProgress} className="mt-3" />
         <p className="mt-2 text-sm text-muted-ink">{ocrBusy ? "Working…" : ocrStatus}</p>
         <div className="mt-3">
-          <FileChip label="Charge receipt" gold onFile={onPick} icon={<Zap className="size-4" />} />
+          <FileChip label="Scan charge receipt" gold onFile={onPick} icon={<Zap className="size-4" />} />
         </div>
         <div className="mt-2 flex flex-wrap gap-2">
           <Button type="button" variant="ghost" size="sm" onClick={() => applyOcrText(SAMPLE_CHARGE, "charge")}>
@@ -582,7 +583,6 @@ function FileChip({
       <input
         type="file"
         accept="image/*"
-        capture="environment"
         className="sr-only"
         onChange={(e) => {
           const f = e.target.files?.[0];

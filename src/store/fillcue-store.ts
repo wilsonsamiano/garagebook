@@ -573,7 +573,11 @@ export const useFillcue = create<GarageState>((set, get) => ({
   handlePhoto: async (file, slot) => {
     set({ ocrBusy: true, ocrProgress: 8, ocrStatus: "Preparing photo…" });
     try {
-      const rec = await recognizeFile(file, (m) => set({ ocrProgress: 40, ocrStatus: m }));
+      const rec = await recognizeFile(
+        file,
+        (m) => set({ ocrProgress: 40, ocrStatus: m }),
+        slot === "cluster" ? "cluster" : "document",
+      );
       const kind = slot === "auto" ? guessPhotoKind(rec.text) : slot;
       const scan = encodeScan(rec.canvas, kind === "cluster" ? "cluster" : "document");
       const { draft, receipt, cluster, serviceDraft, chargeDraft } = get();
