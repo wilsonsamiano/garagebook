@@ -16,14 +16,20 @@ type TessNS = {
 };
 
 type PdfViewport = { width: number; height: number };
+type TextItem = { str?: string; hasEOL?: boolean };
 type PdfPage = {
   getViewport: (o: { scale: number }) => PdfViewport;
   render: (o: { canvasContext: CanvasRenderingContext2D; viewport: PdfViewport }) => { promise: Promise<void> };
+  getTextContent: () => Promise<{ items: Array<TextItem | { type?: string }> }>;
 };
-type PdfDoc = { getPage: (n: number) => Promise<PdfPage> };
+type PdfDoc = { numPages: number; getPage: (n: number) => Promise<PdfPage> };
 type Pdfjs = {
   GlobalWorkerOptions: { workerSrc: string };
-  getDocument: (src: { data: ArrayBuffer }) => { promise: Promise<PdfDoc> };
+  getDocument: (src: {
+    data: Uint8Array;
+    disableWorker?: boolean;
+    isEvalSupported?: boolean;
+  }) => { promise: Promise<PdfDoc> };
 };
 
 declare global {
@@ -41,7 +47,8 @@ function loadScript(src: string): Promise<void> {
       reject(new Error("OCR needs a browser."));
       return;
     }
-    if ([...document.scripts].some((s) => s.src.includes("tesseract"))) {
+    const found = [...document.scripts].find((s) => s.src === src);
+    if (found) {
       resolve();
       return;
     }
@@ -82,31 +89,62 @@ export async function ensureOcr(onProgress?: (msg: string) => void): Promise<Tes
 const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
 const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
 
-function isPdf(file: File): boolean {
-  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
-}
-
 async function ensurePdf(): Promise<Pdfjs> {
   const ready = window.pdfjsLib;
   if (ready) return ready;
   await loadScript(PDFJS);
   const pdf = window.pdfjsLib;
-  if (!pdf) throw new Error("Could not open that PDF.");
+  if (!pdf) throw new Error("Could not open that PDF. Connect once, then try again.");
   pdf.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
   return pdf;
 }
 
-async function pdfFirstPage(file: File): Promise<HTMLCanvasElement> {
+async function looksLikePdf(file: File): Promise<boolean> {
+  if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) return true;
+  const head = new Uint8Array(await file.slice(0, 5).arrayBuffer());
+  return head[0] === 0x25 && head[1] === 0x50 && head[2] === 0x44 && head[3] === 0x46;
+}
+
+async function openPdf(file: File): Promise<PdfDoc> {
   const pdfjs = await ensurePdf();
-  const data = await file.arrayBuffer();
-  const doc = await pdfjs.getDocument({ data }).promise;
-  const page = await doc.getPage(1);
-  const viewport = page.getViewport({ scale: 2 });
+  const data = new Uint8Array(await file.arrayBuffer());
+  return pdfjs.getDocument({ data, disableWorker: true, isEvalSupported: false }).promise;
+}
+
+function itemsToText(items: Array<TextItem | { type?: string }>): string {
+  return items
+    .map((item) => {
+      if (!("str" in item) || !item.str) return "";
+      return item.str + (item.hasEOL ? "\n" : " ");
+    })
+    .join("")
+    .replace(/[ \t]+\n/g, "\n")
+    .trim();
+}
+
+async function pdfText(doc: PdfDoc): Promise<string> {
+  const pages = Math.min(doc.numPages || 1, 3);
+  const chunks: string[] = [];
+  for (let n = 1; n <= pages; n++) {
+    const page = await doc.getPage(n);
+    const content = await page.getTextContent();
+    const text = itemsToText(content.items);
+    if (text) chunks.push(text);
+  }
+  return chunks.join("\n");
+}
+
+async function renderPdfPage(page: PdfPage): Promise<HTMLCanvasElement> {
+  const base = page.getViewport({ scale: 1 });
+  const scale = Math.min(2, 1600 / Math.max(base.width, base.height));
+  const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(viewport.width));
   canvas.height = Math.max(1, Math.round(viewport.height));
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not open that PDF.");
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
   await page.render({ canvasContext: ctx, viewport }).promise;
   return canvas;
 }
@@ -155,8 +193,9 @@ export async function preprocessImage(
   file: File,
   mode: "document" | "cluster" = "document",
 ): Promise<{ canvas: HTMLCanvasElement }> {
-  if (isPdf(file)) {
-    const page = await pdfFirstPage(file);
+  if (await looksLikePdf(file)) {
+    const doc = await openPdf(file);
+    const page = await renderPdfPage(await doc.getPage(1));
     return { canvas: drawForOcr(page, page.width, page.height, mode) };
   }
   const img = await loadImage(file);
@@ -168,6 +207,29 @@ export async function recognizeFile(
   onProgress?: (msg: string) => void,
   mode: "document" | "cluster" = "document",
 ): Promise<{ text: string; confidence: number; canvas: HTMLCanvasElement }> {
+  if (await looksLikePdf(file)) {
+    onProgress?.("Reading PDF…");
+    const doc = await openPdf(file);
+    const embedded = await pdfText(doc);
+    const page = await renderPdfPage(await doc.getPage(1));
+    const canvas = drawForOcr(page, page.width, page.height, mode);
+    if (embedded.replace(/\s/g, "").length >= 24) {
+      return { text: embedded, confidence: 95, canvas };
+    }
+    onProgress?.("No text in the PDF. Scanning the page…");
+    const worker = await ensureOcr(onProgress);
+    await worker.setParameters({
+      tessedit_pageseg_mode: "6",
+      preserve_interword_spaces: "1",
+    });
+    const result = await worker.recognize(canvas);
+    return {
+      text: result.data?.text || "",
+      confidence: result.data?.confidence || 0,
+      canvas,
+    };
+  }
+
   const pre = await preprocessImage(file, mode);
   const worker = await ensureOcr(onProgress);
   await worker.setParameters({

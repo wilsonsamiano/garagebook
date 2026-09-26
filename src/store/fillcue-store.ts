@@ -578,6 +578,10 @@ export const useFillcue = create<GarageState>((set, get) => ({
         (m) => set({ ocrProgress: 40, ocrStatus: m }),
         slot === "cluster" ? "cluster" : "document",
       );
+      const blank = rec.text.trim().length < 12;
+      const readNote = blank
+        ? "Opened the file, but no receipt text was in it. Use Scan Documents here, or in Preview tap Share → Save to Files, then pick that PDF."
+        : "";
       const kind = slot === "auto" ? guessPhotoKind(rec.text) : slot;
       const scan = encodeScan(rec.canvas, kind === "cluster" ? "cluster" : "document");
       const { draft, receipt, cluster, serviceDraft, chargeDraft } = get();
@@ -588,7 +592,7 @@ export const useFillcue = create<GarageState>((set, get) => ({
           draft: parsed,
           captureMode: "fuel",
           ocrProgress: 100,
-          ocrStatus: "Check the fields before saving. Scan stays on this device.",
+          ocrStatus: readNote || "Check the fields before saving. Scan stays on this device.",
           ocrBusy: false,
         });
       } else if (kind === "shop") {
@@ -599,7 +603,7 @@ export const useFillcue = create<GarageState>((set, get) => ({
           serviceDraft: parsed,
           captureMode: "shop",
           ocrProgress: 100,
-          ocrStatus: "Check the shop fields before saving. Scan stays on this device.",
+          ocrStatus: readNote || "Check the shop fields before saving. Scan stays on this device.",
           ocrBusy: false,
         });
       } else if (kind === "charge") {
@@ -610,7 +614,7 @@ export const useFillcue = create<GarageState>((set, get) => ({
           chargeDraft: parsed,
           captureMode: "charge",
           ocrProgress: 100,
-          ocrStatus: "Check the charge fields before saving. Scan stays on this device.",
+          ocrStatus: readNote || "Check the charge fields before saving. Scan stays on this device.",
           ocrBusy: false,
         });
       } else {
@@ -621,9 +625,10 @@ export const useFillcue = create<GarageState>((set, get) => ({
           captureMode: "fuel",
           ocrProgress: 100,
           ocrStatus:
-            kind === "unknown"
+            readNote ||
+            (kind === "unknown"
               ? "Could not tell receipt from cluster — check the fields."
-              : "Check the fields before saving. Scan stays on this device.",
+              : "Check the fields before saving. Scan stays on this device."),
           ocrBusy: false,
         });
       }
