@@ -77,19 +77,20 @@ export function formatScanSize(dataUrl: string): string {
 
 export function encodeScan(source: HTMLCanvasElement, mode: ScanMode = "document"): string {
   if (typeof document === "undefined") return "";
-  const maxEdge = mode === "cluster" ? 640 : 720;
+  const maxEdge = mode === "cluster" ? 900 : 1800;
   const { w, h } = fitSize(source.width, source.height, maxEdge);
   const canvas = document.createElement("canvas");
   canvas.width = w;
   canvas.height = h;
   const ctx = canvas.getContext("2d", { alpha: false });
   if (!ctx) return "";
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, 0, 0, w, h);
   const image = ctx.getImageData(0, 0, w, h);
-  if (mode === "document") applyDocumentScan(image.data);
-  else applyClusterScan(image.data);
+  if (mode === "cluster") applyClusterScan(image.data);
   ctx.putImageData(image, 0, 0);
-  const jpeg = canvas.toDataURL("image/jpeg", mode === "document" ? 0.42 : 0.48);
+  const jpeg = canvas.toDataURL("image/jpeg", mode === "document" ? 0.72 : 0.55);
   const png = canvas.toDataURL("image/png");
   return scanByteLength(png) < scanByteLength(jpeg) ? png : jpeg;
 }

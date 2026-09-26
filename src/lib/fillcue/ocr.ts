@@ -1,5 +1,3 @@
-import { applyDocumentScan } from "@/lib/fillcue/scan";
-
 type TessLogger = { status: string; progress: number };
 
 type TessWorker = {
@@ -136,7 +134,7 @@ async function pdfText(doc: PdfDoc): Promise<string> {
 
 async function renderPdfPage(page: PdfPage): Promise<HTMLCanvasElement> {
   const base = page.getViewport({ scale: 1 });
-  const scale = Math.min(2, 1600 / Math.max(base.width, base.height));
+  const scale = Math.min(4, 3000 / Math.max(base.width, base.height, 1));
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(viewport.width));
@@ -165,9 +163,53 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
+function cropInk(canvas: HTMLCanvasElement, minWidth: number): HTMLCanvasElement {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return canvas;
+  const w = canvas.width;
+  const h = canvas.height;
+  const data = ctx.getImageData(0, 0, w, h).data;
+  let minX = w;
+  let minY = h;
+  let maxX = 0;
+  let maxY = 0;
+  let found = false;
+  const step = Math.max(1, Math.floor(Math.min(w, h) / 500));
+  for (let y = 0; y < h; y += step) {
+    for (let x = 0; x < w; x += step) {
+      const i = (y * w + x) * 4;
+      if (data[i] < 210) {
+        found = true;
+        if (x < minX) minX = x;
+        if (y < minY) minY = y;
+        if (x > maxX) maxX = x;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (!found || maxX <= minX || maxY <= minY) return canvas;
+  const pad = Math.round(Math.min(w, h) * 0.03);
+  minX = Math.max(0, minX - pad);
+  minY = Math.max(0, minY - pad);
+  maxX = Math.min(w - 1, maxX + pad);
+  maxY = Math.min(h - 1, maxY + pad);
+  const cw = maxX - minX + 1;
+  const ch = maxY - minY + 1;
+  const scale = Math.max(1, Math.min(minWidth / cw, 2400 / Math.max(cw, ch)));
+  const out = document.createElement("canvas");
+  out.width = Math.max(1, Math.round(cw * scale));
+  out.height = Math.max(1, Math.round(ch * scale));
+  const octx = out.getContext("2d");
+  if (!octx) return canvas;
+  octx.imageSmoothingEnabled = true;
+  octx.imageSmoothingQuality = "high";
+  octx.drawImage(canvas, minX, minY, cw, ch, 0, 0, out.width, out.height);
+  return out;
+}
+
 function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "document" | "cluster"): HTMLCanvasElement {
-  const maxW = 1800;
-  const scale = Math.min(1, maxW / sw);
+  const maxEdge = mode === "document" ? 3000 : 1800;
+  const scale = Math.min(1, maxEdge / Math.max(sw, sh));
   const w = Math.max(1, Math.round(sw * scale));
   const h = Math.max(1, Math.round(sh * scale));
   const canvas = document.createElement("canvas");
@@ -175,18 +217,20 @@ function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "do
   canvas.height = h;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Could not prepare that image");
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, 0, 0, w, h);
   const data = ctx.getImageData(0, 0, w, h);
   const d = data.data;
   for (let i = 0; i < d.length; i += 4) {
     let y = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-    y = (y - 128) * 1.35 + 128;
+    y = (y - 128) * 1.25 + 128;
     y = Math.max(0, Math.min(255, y));
     d[i] = d[i + 1] = d[i + 2] = y;
   }
-  if (mode === "document") applyDocumentScan(d);
   ctx.putImageData(data, 0, 0);
-  return canvas;
+  if (mode === "cluster") return canvas;
+  return cropInk(canvas, 2000);
 }
 
 export async function preprocessImage(

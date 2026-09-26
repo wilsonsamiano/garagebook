@@ -108,8 +108,8 @@ export function parseReceipt(text: string): ReceiptParse {
   if (/diesel/i.test(t)) out.grade = "Diesel";
   else if (/premium\s*93|93\s*octane/i.test(t)) out.grade = "Premium 93";
   else if (/premium\s*91|91\s*octane/i.test(t)) out.grade = "Premium 91";
-  else if (/midgrade|89/i.test(t)) out.grade = "Midgrade 89";
-  else if (/regular|87/i.test(t)) out.grade = "Regular 87";
+  else if (/midgrade|plus\s*89|\b89\b/i.test(t)) out.grade = "Midgrade 89";
+  else if (/unleaded|regular|\b87\b/i.test(t)) out.grade = "Regular 87";
 
   const gal = t.match(/gallons?\s*[:\s]*([0-9]+\.[0-9]+)/i) || t.match(/\b([0-9]+\.[0-9]{2,4})\s*gal/i);
   if (gal) out.gallons = num(gal[1]);
