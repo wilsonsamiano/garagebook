@@ -60,6 +60,24 @@ TOTAL PURCHASES $60.01
   it("treats unleaded as regular", () => assert.equal(parsed.grade, "Regular 87"));
 });
 
+describe("fuel numbers that are not next to the labels", () => {
+  const slip = `
+MAVERIK
+Marana, AZ 85653
+09/24/2026 05:16
+UNLEADED
+TOTAL FUEL $60.01
+SUB-TOTAL $60.01
+TOTAL PURCHASES $60.01
+13.459
+4.459
+`;
+  const parsed = parseReceipt(slip);
+  it("fills gallons from the numbers that multiply to the total", () => assert.equal(parsed.gallons, 13.459));
+  it("fills price per gallon", () => assert.equal(parsed.pricePerGal, 4.459));
+  it("keeps the sale total", () => assert.equal(parsed.total, 60.01));
+});
+
 describe("parseCluster", () => {
   const c = parseCluster(cluster);
   it("reads odometer", () => assert.equal(c.odometer, 112468));

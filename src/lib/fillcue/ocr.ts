@@ -281,18 +281,20 @@ export async function recognizeFile(
       const embedded = await withTimeout(pdfText(doc), 12000, slow);
       const page = await withTimeout(renderPdfPage(await doc.getPage(1)), 20000, slow);
       const canvas = drawForOcr(page, page.width, page.height, mode);
-      if (embedded.replace(/\s/g, "").length >= 24) {
+      const uniqueDecimals = new Set(embedded.match(/\d+\.\d{2,4}/g) || []);
+      if (uniqueDecimals.size >= 3) {
         return { text: embedded, confidence: 95, canvas };
       }
-      onProgress?.("Scanning the page…");
+      onProgress?.("Scanning the page for gallons and price…");
       const worker = await withTimeout(ensureOcr(onProgress), 60000, "Could not start the reader. Connect once, then try again.");
       await worker.setParameters({
         tessedit_pageseg_mode: "6",
         preserve_interword_spaces: "1",
       });
       const result = await withTimeout(worker.recognize(canvas), 25000, slow);
+      const seen = result.data?.text || "";
       return {
-        text: result.data?.text || embedded,
+        text: [embedded, seen].filter((part) => part.trim()).join("\n"),
         confidence: result.data?.confidence || 0,
         canvas,
       };

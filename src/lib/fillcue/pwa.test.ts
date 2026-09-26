@@ -21,7 +21,7 @@ describe("GarageBook PWA", () => {
   });
 
   it("caches the app shell and Tesseract, not EPA", () => {
-    assert.match(sw, /garagebook-v11/);
+    assert.match(sw, /garagebook-v12/);
     assert.match(sw, /no-store/);
     assert.match(sw, /tesseract/);
     assert.match(sw, /fueleconomy\.gov/);

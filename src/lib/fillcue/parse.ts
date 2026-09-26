@@ -75,22 +75,29 @@ export type ChargeParse = {
 
 function fuelTriple(text: string): { gal: number; ppg: number; total: number } | null {
   const found = [...text.matchAll(/\$?\s*(\d{1,3}\.\d{2,4})/g)].map((m) => Number(m[1]));
+  const unique = [...new Set(found.map((n) => Math.round(n * 10000) / 10000))];
   let best: { gal: number; ppg: number; total: number } | null = null;
-  let bestErr = 0.25;
-  for (let i = 0; i <= found.length - 3; i++) {
-    const window = found.slice(i, i + 3);
-    const picks: Array<[number, number, number]> = [
-      [window[0], window[1], window[2]],
-      [window[0], window[2], window[1]],
-      [window[1], window[0], window[2]],
-    ];
-    for (const [gal, ppg, total] of picks) {
-      if (gal < 0.4 || gal > 40 || ppg < 1.5 || ppg > 9.5 || total < 2 || total > 300) continue;
-      const err = Math.abs(gal * ppg - total);
-      const tol = Math.max(0.08, total * 0.02);
-      if (err <= tol && err < bestErr) {
-        bestErr = err;
-        best = { gal, ppg, total };
+  let bestErr = 0.3;
+  const isGal = (n: number) => n >= 0.4 && n <= 40;
+  const isPpg = (n: number) => n >= 1.5 && n <= 9.5;
+  const isTotal = (n: number) => n >= 2 && n <= 300;
+  for (const a of unique) {
+    for (const b of unique) {
+      if (a === b) continue;
+      for (const total of unique) {
+        if (total === a || total === b || !isTotal(total)) continue;
+        const options: Array<[number, number]> = [];
+        if (isGal(a) && isPpg(b)) options.push([a, b]);
+        if (isGal(b) && isPpg(a)) options.push([b, a]);
+        for (const [gal, ppg] of options) {
+          const err = Math.abs(gal * ppg - total);
+          const tol = Math.max(0.1, total * 0.02);
+          const prefer = gal >= ppg ? 0 : 0.05;
+          if (err <= tol && err + prefer < bestErr) {
+            bestErr = err + prefer;
+            best = { gal, ppg, total };
+          }
+        }
       }
     }
   }
@@ -111,7 +118,8 @@ function fillFuelNumbers(text: string, out: ReceiptParse) {
   for (let i = 0; i < lines.length - 1; i++) {
     const header = lines[i];
     if (!/gal/i.test(header)) continue;
-    const vals = [...lines[i + 1].matchAll(/\$?\s*(\d+\.\d{2,4})/g)].map((m) => Number(m[1]));
+    const next = [lines[i + 1], lines[i + 2]].filter(Boolean).join(" ");
+    const vals = [...next.matchAll(/\$?\s*(\d+\.\d{2,4})/g)].map((m) => Number(m[1]));
     if (vals.length < 2) continue;
     const cols = [
       { name: "gal" as const, at: header.search(/gal/i) },
