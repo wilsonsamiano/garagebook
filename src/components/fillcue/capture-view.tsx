@@ -102,8 +102,7 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Review before save</CardTitle>
         <CardDescription className="mb-3">
-          On iPhone, tap Scan, then <strong className="text-navy">Scan Documents</strong>. That is the same
-          page scanner as Preview — not a regular photo. Check gallons, price, and odometer before you save.
+          On iPhone, Preview saves a PDF in Files — not Photos. Tap Scan receipt and choose that PDF, or tap Scan Documents so it comes straight here. Check gallons, price, and odometer before you save.
         </CardDescription>
         <div className="grid grid-cols-2 gap-2">
           <ScanTile src={receipt.preview} caption="Receipt" />
@@ -582,7 +581,7 @@ function FileChip({
     <label>
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf,.pdf"
         className="sr-only"
         onChange={(e) => {
           const f = e.target.files?.[0];

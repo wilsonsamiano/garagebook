@@ -189,7 +189,7 @@ function FileButton({
     <label className={className}>
       <input
         type="file"
-        accept="image/*"
+        accept="image/*,application/pdf,.pdf"
         className="sr-only"
         onChange={(e) => {
           const f = e.target.files?.[0];

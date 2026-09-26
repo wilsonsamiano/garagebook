@@ -15,9 +15,21 @@ type TessNS = {
   ) => Promise<TessWorker>;
 };
 
+type PdfViewport = { width: number; height: number };
+type PdfPage = {
+  getViewport: (o: { scale: number }) => PdfViewport;
+  render: (o: { canvasContext: CanvasRenderingContext2D; viewport: PdfViewport }) => { promise: Promise<void> };
+};
+type PdfDoc = { getPage: (n: number) => Promise<PdfPage> };
+type Pdfjs = {
+  GlobalWorkerOptions: { workerSrc: string };
+  getDocument: (src: { data: ArrayBuffer }) => { promise: Promise<PdfDoc> };
+};
+
 declare global {
   interface Window {
     Tesseract?: TessNS;
+    pdfjsLib?: Pdfjs;
   }
 }
 
@@ -67,40 +79,45 @@ export async function ensureOcr(onProgress?: (msg: string) => void): Promise<Tes
   return worker;
 }
 
-export function preprocessImage(
-  file: File,
-  mode: "document" | "cluster" = "document",
-  maxW = 1800,
-): Promise<{ canvas: HTMLCanvasElement }> {
+const PDFJS = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js";
+const PDFJS_WORKER = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+
+function isPdf(file: File): boolean {
+  return file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf");
+}
+
+async function ensurePdf(): Promise<Pdfjs> {
+  const ready = window.pdfjsLib;
+  if (ready) return ready;
+  await loadScript(PDFJS);
+  const pdf = window.pdfjsLib;
+  if (!pdf) throw new Error("Could not open that PDF.");
+  pdf.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+  return pdf;
+}
+
+async function pdfFirstPage(file: File): Promise<HTMLCanvasElement> {
+  const pdfjs = await ensurePdf();
+  const data = await file.arrayBuffer();
+  const doc = await pdfjs.getDocument({ data }).promise;
+  const page = await doc.getPage(1);
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.max(1, Math.round(viewport.width));
+  canvas.height = Math.max(1, Math.round(viewport.height));
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not open that PDF.");
+  await page.render({ canvasContext: ctx, viewport }).promise;
+  return canvas;
+}
+
+function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     const url = URL.createObjectURL(file);
     img.onload = () => {
-      const scale = Math.min(1, maxW / img.width);
-      const w = Math.max(1, Math.round(img.width * scale));
-      const h = Math.max(1, Math.round(img.height * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        URL.revokeObjectURL(url);
-        reject(new Error("Could not prepare that image"));
-        return;
-      }
-      ctx.drawImage(img, 0, 0, w, h);
-      const data = ctx.getImageData(0, 0, w, h);
-      const d = data.data;
-      for (let i = 0; i < d.length; i += 4) {
-        let y = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
-        y = (y - 128) * 1.35 + 128;
-        y = Math.max(0, Math.min(255, y));
-        d[i] = d[i + 1] = d[i + 2] = y;
-      }
-      if (mode === "document") applyDocumentScan(d);
-      ctx.putImageData(data, 0, 0);
       URL.revokeObjectURL(url);
-      resolve({ canvas });
+      resolve(img);
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -108,6 +125,42 @@ export function preprocessImage(
     };
     img.src = url;
   });
+}
+
+function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "document" | "cluster"): HTMLCanvasElement {
+  const maxW = 1800;
+  const scale = Math.min(1, maxW / sw);
+  const w = Math.max(1, Math.round(sw * scale));
+  const h = Math.max(1, Math.round(sh * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not prepare that image");
+  ctx.drawImage(source, 0, 0, w, h);
+  const data = ctx.getImageData(0, 0, w, h);
+  const d = data.data;
+  for (let i = 0; i < d.length; i += 4) {
+    let y = 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+    y = (y - 128) * 1.35 + 128;
+    y = Math.max(0, Math.min(255, y));
+    d[i] = d[i + 1] = d[i + 2] = y;
+  }
+  if (mode === "document") applyDocumentScan(d);
+  ctx.putImageData(data, 0, 0);
+  return canvas;
+}
+
+export async function preprocessImage(
+  file: File,
+  mode: "document" | "cluster" = "document",
+): Promise<{ canvas: HTMLCanvasElement }> {
+  if (isPdf(file)) {
+    const page = await pdfFirstPage(file);
+    return { canvas: drawForOcr(page, page.width, page.height, mode) };
+  }
+  const img = await loadImage(file);
+  return { canvas: drawForOcr(img, img.naturalWidth || img.width, img.naturalHeight || img.height, mode) };
 }
 
 export async function recognizeFile(

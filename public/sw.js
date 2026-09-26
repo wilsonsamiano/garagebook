@@ -1,5 +1,5 @@
 /* GarageBook service worker — app shell + OCR engine. Logs stay in IndexedDB. */
-const CACHE = "garagebook-v6";
+const CACHE = "garagebook-v7";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -45,7 +45,7 @@ function shouldBypass(url) {
 
 function isOcrCdn(url) {
   const u = new URL(url);
-  return u.hostname.includes("jsdelivr.net") && u.pathname.includes("tesseract");
+  return u.hostname.includes("jsdelivr.net") && (u.pathname.includes("tesseract") || u.pathname.includes("pdfjs"));
 }
 
 self.addEventListener("fetch", (event) => {
