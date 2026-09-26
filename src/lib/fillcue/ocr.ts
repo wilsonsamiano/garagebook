@@ -256,6 +256,64 @@ function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "do
   return cropInk(canvas);
 }
 
+function fuelStrip(page: HTMLCanvasElement): HTMLCanvasElement {
+  const w = page.width;
+  const h = page.height;
+  const ctx = page.getContext("2d", { willReadFrequently: true });
+  if (!ctx || w < 20 || h < 20) return page;
+  const data = ctx.getImageData(0, 0, w, h).data;
+  const gray = new Array<number>(h).fill(0);
+  for (let y = 0; y < h; y++) {
+    let n = 0;
+    for (let x = 0; x < w; x += 3) {
+      const i = (y * w + x) * 4;
+      const v = data[i];
+      if (v > 50 && v < 200) n++;
+    }
+    gray[y] = n;
+  }
+  const win = Math.max(24, Math.floor(h * 0.12));
+  const y0 = Math.floor(h * 0.2);
+  const y1 = Math.max(y0, Math.floor(h * 0.72) - win);
+  let bestY = Math.floor(h * 0.38);
+  let best = -1;
+  for (let y = y0; y <= y1; y += 3) {
+    let score = 0;
+    for (let k = 0; k < win; k += 2) score += gray[y + k] || 0;
+    if (score > best) {
+      best = score;
+      bestY = y;
+    }
+  }
+  const sh = Math.min(h - bestY, win);
+  const scale = Math.min(3, 280 / Math.max(sh, 1));
+  const out = document.createElement("canvas");
+  out.width = Math.max(1, Math.round(w * scale));
+  out.height = Math.max(1, Math.round(sh * scale));
+  const octx = out.getContext("2d");
+  if (!octx) return page;
+  octx.imageSmoothingEnabled = false;
+  octx.fillStyle = "#fff";
+  octx.fillRect(0, 0, out.width, out.height);
+  octx.drawImage(page, 0, bestY, w, sh, 0, 0, out.width, out.height);
+  return out;
+}
+
+async function readFuelStrip(
+  page: HTMLCanvasElement,
+  onProgress?: (msg: string) => void,
+): Promise<string> {
+  onProgress?.("Reading the gallons line…");
+  const worker = await ensureOcr(onProgress);
+  await worker.setParameters({
+    tessedit_pageseg_mode: "7",
+    tessedit_char_whitelist: "0123456789.$/",
+    preserve_interword_spaces: "1",
+  });
+  const result = await withTimeout(worker.recognize(fuelStrip(page)), 12000, "Could not read the gallons line.");
+  return result.data?.text || "";
+}
+
 export async function preprocessImage(
   file: File,
   mode: "document" | "cluster" = "document",
@@ -283,20 +341,31 @@ export async function recognizeFile(
       const embedded = await withTimeout(pdfText(doc), 12000, slow);
       const page = await withTimeout(renderPdfPage(await doc.getPage(1)), 20000, slow);
       const canvas = drawForOcr(page, page.width, page.height, mode);
-      const parsed = parseReceipt(embedded);
-      if (parsed.gallons != null && parsed.pricePerGal != null) {
-        return { text: embedded, confidence: 95, canvas };
+      let text = embedded;
+      const parsed = parseReceipt(text);
+      if (parsed.gallons == null || parsed.pricePerGal == null) {
+        try {
+          const strip = await readFuelStrip(page, onProgress);
+          if (strip.trim()) text = `${text}\n${strip}`;
+        } catch {
+          onProgress?.("Scanning the whole page…");
+        }
+      }
+      const afterStrip = parseReceipt(text);
+      if (afterStrip.gallons != null && afterStrip.pricePerGal != null) {
+        return { text, confidence: 90, canvas };
       }
       onProgress?.("Scanning the pump line for gallons and price…");
       const worker = await withTimeout(ensureOcr(onProgress), 60000, "Could not start the reader. Connect once, then try again.");
       await worker.setParameters({
         tessedit_pageseg_mode: "6",
+        tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#.,:$/°%+- ",
         preserve_interword_spaces: "1",
       });
       const result = await withTimeout(worker.recognize(canvas), 25000, slow);
       const seen = result.data?.text || "";
       return {
-        text: [embedded, seen].filter((part) => part.trim()).join("\n"),
+        text: [text, seen].filter((part) => part.trim()).join("\n"),
         confidence: result.data?.confidence || 0,
         canvas,
       };

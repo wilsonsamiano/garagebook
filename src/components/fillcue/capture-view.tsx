@@ -65,6 +65,26 @@ export function CaptureView({ onTab }: { onTab: (t: TabId) => void }) {
 }
 
 
+function pumpPatch(
+  draft: { total: string; gallons: string; pricePerGal: string },
+  patch: { gallons?: string; pricePerGal?: string },
+) {
+  const total = Number(draft.total);
+  const next: { gallons?: string; pricePerGal?: string } = { ...patch };
+  if (!(total > 0)) return next;
+  if (patch.pricePerGal != null && patch.pricePerGal !== "" && !draft.gallons) {
+    const ppg = Number(patch.pricePerGal);
+    const gal = ppg > 0 ? total / ppg : 0;
+    if (gal >= 0.4 && gal <= 40) next.gallons = (Math.round(gal * 1000) / 1000).toString();
+  }
+  if (patch.gallons != null && patch.gallons !== "" && !draft.pricePerGal) {
+    const gal = Number(patch.gallons);
+    const ppg = gal > 0 ? total / gal : 0;
+    if (ppg >= 1.5 && ppg <= 9.5) next.pricePerGal = (Math.round(ppg * 1000) / 1000).toString();
+  }
+  return next;
+}
+
 function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
   const draft = useFillcue((s) => s.draft);
   const setDraft = useFillcue((s) => s.setDraft);
@@ -159,13 +179,17 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
             <NativeSelect value={draft.grade} onChange={(v) => setDraft({ grade: v })} options={GRADES} />
           </Field>
           <Field label="Gallons">
-            <Input inputMode="decimal" value={draft.gallons} onChange={(e) => setDraft({ gallons: e.target.value })} />
+            <Input
+              inputMode="decimal"
+              value={draft.gallons}
+              onChange={(e) => setDraft(pumpPatch(draft, { gallons: e.target.value }))}
+            />
           </Field>
           <Field label="Price / gal">
             <Input
               inputMode="decimal"
               value={draft.pricePerGal}
-              onChange={(e) => setDraft({ pricePerGal: e.target.value })}
+              onChange={(e) => setDraft(pumpPatch(draft, { pricePerGal: e.target.value }))}
             />
           </Field>
           <Field label="Total $">
