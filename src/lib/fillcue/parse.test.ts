@@ -41,6 +41,25 @@ describe("parseReceipt", () => {
   it("reads pump", () => assert.equal(r.pump, "8"));
 });
 
+describe("column fuel receipts", () => {
+  const slip = `
+MAVERIK
+El Paso, TX 79906
+09/24/2026 08:06
+UNLEADED
+GALLONS     PPG      AMOUNT
+13.459     $4.459    $60.01
+TOTAL PURCHASES $60.01
+`;
+  const parsed = parseReceipt(slip);
+
+  it("names Maverik", () => assert.equal(parsed.station, "Maverik"));
+  it("puts gallons in the field from the line under the label", () => assert.equal(parsed.gallons, 13.459));
+  it("puts price per gallon in the field", () => assert.equal(parsed.pricePerGal, 4.459));
+  it("puts the sale total in the field", () => assert.equal(parsed.total, 60.01));
+  it("treats unleaded as regular", () => assert.equal(parsed.grade, "Regular 87"));
+});
+
 describe("parseCluster", () => {
   const c = parseCluster(cluster);
   it("reads odometer", () => assert.equal(c.odometer, 112468));

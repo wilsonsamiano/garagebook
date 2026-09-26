@@ -73,6 +73,72 @@ export type ChargeParse = {
   odometer: number | null;
 };
 
+function fuelTriple(text: string): { gal: number; ppg: number; total: number } | null {
+  const found = [...text.matchAll(/\$?\s*(\d{1,3}\.\d{2,4})/g)].map((m) => Number(m[1]));
+  let best: { gal: number; ppg: number; total: number } | null = null;
+  let bestErr = 0.25;
+  for (let i = 0; i <= found.length - 3; i++) {
+    const window = found.slice(i, i + 3);
+    const picks: Array<[number, number, number]> = [
+      [window[0], window[1], window[2]],
+      [window[0], window[2], window[1]],
+      [window[1], window[0], window[2]],
+    ];
+    for (const [gal, ppg, total] of picks) {
+      if (gal < 0.4 || gal > 40 || ppg < 1.5 || ppg > 9.5 || total < 2 || total > 300) continue;
+      const err = Math.abs(gal * ppg - total);
+      const tol = Math.max(0.08, total * 0.02);
+      if (err <= tol && err < bestErr) {
+        bestErr = err;
+        best = { gal, ppg, total };
+      }
+    }
+  }
+  return best;
+}
+
+function fillFuelNumbers(text: string, out: ReceiptParse) {
+  for (const line of text.split(/\n/)) {
+    const gal = line.match(/gal(?:lon)?s?\s*[:#]?\s*\$?\s*(\d+\.\d{2,4})/i) || line.match(/\b(\d+\.\d{2,4})\s*gal/i);
+    if (gal && out.gallons == null) out.gallons = num(gal[1]);
+    const ppg = line.match(/(?:price(?:\s*\/\s*gal(?:lon)?)?|ppg|\$\s*\/\s*g(?:al)?)\s*[:#]?\s*\$?\s*(\d+\.\d{2,4})/i);
+    if (ppg && out.pricePerGal == null) out.pricePerGal = num(ppg[1]);
+    const tot = line.match(/(?:total sale|fuel sale|amount|total(?:\s+purchases)?)\s*[:#]?\s*\$?\s*(\d+\.\d{2})/i);
+    if (tot && out.total == null) out.total = num(tot[1]);
+  }
+
+  const lines = text.split(/\n/);
+  for (let i = 0; i < lines.length - 1; i++) {
+    const header = lines[i];
+    if (!/gal/i.test(header)) continue;
+    const vals = [...lines[i + 1].matchAll(/\$?\s*(\d+\.\d{2,4})/g)].map((m) => Number(m[1]));
+    if (vals.length < 2) continue;
+    const cols = [
+      { name: "gal" as const, at: header.search(/gal/i) },
+      { name: "price" as const, at: header.search(/ppg|price|\$\s*\/\s*g/i) },
+      { name: "total" as const, at: header.search(/amount|total|sale/i) },
+    ]
+      .filter((col) => col.at >= 0)
+      .sort((a, b) => a.at - b.at);
+    cols.forEach((col, idx) => {
+      const value = vals[idx];
+      if (value == null) return;
+      if (col.name === "gal" && out.gallons == null) out.gallons = value;
+      if (col.name === "price" && out.pricePerGal == null) out.pricePerGal = value;
+      if (col.name === "total" && out.total == null) out.total = value;
+    });
+  }
+
+  if (out.gallons == null || out.pricePerGal == null) {
+    const hit = fuelTriple(text);
+    if (hit) {
+      if (out.gallons == null) out.gallons = hit.gal;
+      if (out.pricePerGal == null) out.pricePerGal = hit.ppg;
+      if (out.total == null) out.total = hit.total;
+    }
+  }
+}
+
 export function parseReceipt(text: string): ReceiptParse {
   const t = clean(text);
   const out: ReceiptParse = {
@@ -94,6 +160,8 @@ export function parseReceipt(text: string): ReceiptParse {
   } else if (/costco/i.test(t)) {
     const m = t.match(/costco[^\n]*#?\s*\d+/i);
     out.station = m ? m[0].replace(/\s+/g, " ").trim() : "Costco";
+  } else if (/maverik/i.test(t)) {
+    out.station = "Maverik";
   } else {
     const first = t.split(/\n/).map((l) => l.trim()).find((l) => l && !/date|time|pump|gallon/i.test(l));
     if (first) out.station = first.slice(0, 48);
@@ -111,12 +179,7 @@ export function parseReceipt(text: string): ReceiptParse {
   else if (/midgrade|plus\s*89|\b89\b/i.test(t)) out.grade = "Midgrade 89";
   else if (/unleaded|regular|\b87\b/i.test(t)) out.grade = "Regular 87";
 
-  const gal = t.match(/gallons?\s*[:\s]*([0-9]+\.[0-9]+)/i) || t.match(/\b([0-9]+\.[0-9]{2,4})\s*gal/i);
-  if (gal) out.gallons = num(gal[1]);
-  const ppg = t.match(/price\s*[:\s]*\$?\s*([0-9]+\.[0-9]{2,3})/i);
-  if (ppg) out.pricePerGal = num(ppg[1]);
-  const tot = t.match(/(?:total sale|amount|total)\s*[:\s]*\$?\s*([0-9]+\.[0-9]{2})/i);
-  if (tot) out.total = num(tot[1]);
+  fillFuelNumbers(t, out);
   return out;
 }
 
