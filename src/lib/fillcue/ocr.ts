@@ -3,6 +3,7 @@ type TessLogger = { status: string; progress: number };
 type TessWorker = {
   setParameters: (p: Record<string, string>) => Promise<void>;
   recognize: (image: HTMLCanvasElement) => Promise<{ data?: { text?: string; confidence?: number } }>;
+  terminate: () => Promise<void>;
 };
 
 type TessNS = {
@@ -38,6 +39,23 @@ declare global {
 }
 
 let workerPromise: Promise<TessWorker> | null = null;
+let progressSink: ((msg: string) => void) | undefined;
+
+function withTimeout<T>(work: Promise<T>, ms: number, message: string): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error(message)), ms);
+    work.then(
+      (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      (err) => {
+        clearTimeout(timer);
+        reject(err instanceof Error ? err : new Error(String(err)));
+      },
+    );
+  });
+}
 
 function loadScript(src: string): Promise<void> {
   return new Promise((resolve, reject) => {
@@ -71,8 +89,11 @@ export async function ensureOcr(onProgress?: (msg: string) => void): Promise<Tes
   if (!Tess) throw new Error("OCR engine did not start.");
   workerPromise = Tess.createWorker("eng", 1, {
     logger: (m) => {
-      if (m.status === "recognizing text" && onProgress) {
-        onProgress(`Reading photo ${Math.round((m.progress || 0) * 100)}%`);
+      if (m.status === "recognizing text") {
+        const pct = Math.round((m.progress || 0) * 100);
+        progressSink?.(`Reading receipt ${pct}%`);
+      } else if (m.status) {
+        progressSink?.(m.status);
       }
     },
   });
@@ -134,7 +155,7 @@ async function pdfText(doc: PdfDoc): Promise<string> {
 
 async function renderPdfPage(page: PdfPage): Promise<HTMLCanvasElement> {
   const base = page.getViewport({ scale: 1 });
-  const scale = Math.min(4, 3000 / Math.max(base.width, base.height, 1));
+  const scale = Math.min(2, 1400 / Math.max(base.width, base.height, 1));
   const viewport = page.getViewport({ scale });
   const canvas = document.createElement("canvas");
   canvas.width = Math.max(1, Math.round(viewport.width));
@@ -163,7 +184,7 @@ function loadImage(file: File): Promise<HTMLImageElement> {
   });
 }
 
-function cropInk(canvas: HTMLCanvasElement, minWidth: number): HTMLCanvasElement {
+function cropInk(canvas: HTMLCanvasElement): HTMLCanvasElement {
   const ctx = canvas.getContext("2d");
   if (!ctx) return canvas;
   const w = canvas.width;
@@ -195,7 +216,7 @@ function cropInk(canvas: HTMLCanvasElement, minWidth: number): HTMLCanvasElement
   maxY = Math.min(h - 1, maxY + pad);
   const cw = maxX - minX + 1;
   const ch = maxY - minY + 1;
-  const scale = Math.max(1, Math.min(minWidth / cw, 2400 / Math.max(cw, ch)));
+  const scale = Math.min(1, 1400 / Math.max(cw, ch));
   const out = document.createElement("canvas");
   out.width = Math.max(1, Math.round(cw * scale));
   out.height = Math.max(1, Math.round(ch * scale));
@@ -208,7 +229,7 @@ function cropInk(canvas: HTMLCanvasElement, minWidth: number): HTMLCanvasElement
 }
 
 function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "document" | "cluster"): HTMLCanvasElement {
-  const maxEdge = mode === "document" ? 3000 : 1800;
+  const maxEdge = 1400;
   const scale = Math.min(1, maxEdge / Math.max(sw, sh));
   const w = Math.max(1, Math.round(sw * scale));
   const h = Math.max(1, Math.round(sh * scale));
@@ -230,7 +251,7 @@ function drawForOcr(source: CanvasImageSource, sw: number, sh: number, mode: "do
   }
   ctx.putImageData(data, 0, 0);
   if (mode === "cluster") return canvas;
-  return cropInk(canvas, 2000);
+  return cropInk(canvas);
 }
 
 export async function preprocessImage(
@@ -251,41 +272,52 @@ export async function recognizeFile(
   onProgress?: (msg: string) => void,
   mode: "document" | "cluster" = "document",
 ): Promise<{ text: string; confidence: number; canvas: HTMLCanvasElement }> {
-  if (await looksLikePdf(file)) {
-    onProgress?.("Reading PDF…");
-    const doc = await openPdf(file);
-    const embedded = await pdfText(doc);
-    const page = await renderPdfPage(await doc.getPage(1));
-    const canvas = drawForOcr(page, page.width, page.height, mode);
-    if (embedded.replace(/\s/g, "").length >= 24) {
-      return { text: embedded, confidence: 95, canvas };
+  progressSink = onProgress;
+  const slow = "That page took too long to read. Try Scan Documents inside GarageBook so it gets a smaller page.";
+  try {
+    if (await looksLikePdf(file)) {
+      onProgress?.("Reading PDF…");
+      const doc = await withTimeout(openPdf(file), 20000, slow);
+      const embedded = await withTimeout(pdfText(doc), 12000, slow);
+      const page = await withTimeout(renderPdfPage(await doc.getPage(1)), 20000, slow);
+      const canvas = drawForOcr(page, page.width, page.height, mode);
+      if (embedded.replace(/\s/g, "").length >= 24) {
+        return { text: embedded, confidence: 95, canvas };
+      }
+      onProgress?.("Scanning the page…");
+      const worker = await withTimeout(ensureOcr(onProgress), 60000, "Could not start the reader. Connect once, then try again.");
+      await worker.setParameters({
+        tessedit_pageseg_mode: "6",
+        preserve_interword_spaces: "1",
+      });
+      const result = await withTimeout(worker.recognize(canvas), 25000, slow);
+      return {
+        text: result.data?.text || embedded,
+        confidence: result.data?.confidence || 0,
+        canvas,
+      };
     }
-    onProgress?.("No text in the PDF. Scanning the page…");
-    const worker = await ensureOcr(onProgress);
+
+    const pre = await preprocessImage(file, mode);
+    const worker = await withTimeout(ensureOcr(onProgress), 20000, "Could not start the reader. Connect once, then try again.");
     await worker.setParameters({
-      tessedit_pageseg_mode: "6",
+      tessedit_pageseg_mode: mode === "cluster" ? "11" : "6",
+      tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#.,:$/°%+- ",
       preserve_interword_spaces: "1",
     });
-    const result = await worker.recognize(canvas);
+    onProgress?.("Reading scan…");
+    const result = await withTimeout(worker.recognize(pre.canvas), 25000, slow);
     return {
       text: result.data?.text || "",
       confidence: result.data?.confidence || 0,
-      canvas,
+      canvas: pre.canvas,
     };
+  } catch (err) {
+    const worker = await workerPromise?.catch(() => null);
+    workerPromise = null;
+    void worker?.terminate().catch(() => undefined);
+    throw err;
+  } finally {
+    progressSink = undefined;
   }
-
-  const pre = await preprocessImage(file, mode);
-  const worker = await ensureOcr(onProgress);
-  await worker.setParameters({
-    tessedit_pageseg_mode: mode === "cluster" ? "11" : "6",
-    tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789#.,:$/°%+- ",
-    preserve_interword_spaces: "1",
-  });
-  onProgress?.("Reading scan…");
-  const result = await worker.recognize(pre.canvas);
-  return {
-    text: result.data?.text || "",
-    confidence: result.data?.confidence || 0,
-    canvas: pre.canvas,
-  };
 }

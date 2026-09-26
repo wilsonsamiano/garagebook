@@ -77,7 +77,7 @@ export function formatScanSize(dataUrl: string): string {
 
 export function encodeScan(source: HTMLCanvasElement, mode: ScanMode = "document"): string {
   if (typeof document === "undefined") return "";
-  const maxEdge = mode === "cluster" ? 900 : 1800;
+  const maxEdge = mode === "cluster" ? 900 : 1400;
   const { w, h } = fitSize(source.width, source.height, maxEdge);
   const canvas = document.createElement("canvas");
   canvas.width = w;

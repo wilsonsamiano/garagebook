@@ -571,6 +571,7 @@ export const useFillcue = create<GarageState>((set, get) => ({
   },
 
   handlePhoto: async (file, slot) => {
+    if (get().ocrBusy) return;
     set({ ocrBusy: true, ocrProgress: 8, ocrStatus: "Preparing photo…" });
     try {
       const rec = await recognizeFile(
