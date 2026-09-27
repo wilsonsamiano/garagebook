@@ -26,6 +26,7 @@ import {
   parseReceipt,
   parseShopReceipt,
 } from "@/lib/fillcue/parse";
+import { chargeSaveGaps, fuelSaveGaps, shopSaveGaps } from "@/lib/fillcue/gates";
 import { recognizeFile } from "@/lib/fillcue/ocr";
 import { encodeScan } from "@/lib/fillcue/scan";
 import { summarizeOwnership } from "@/lib/fillcue/ownership";
@@ -370,9 +371,11 @@ export const useFillcue = create<GarageState>((set, get) => ({
 
   saveDraft: async () => {
     const { draft, receipt, cluster, settings, fills } = get();
-    if (!draft.date) {
-      set({ ocrStatus: "Add a date before saving." });
-      throw new Error("Add a date before saving.");
+    const gaps = fuelSaveGaps(draft);
+    if (gaps.length) {
+      const message = `Enter ${gaps.join(", ")} before saving.`;
+      set({ ocrStatus: message });
+      throw new Error(message);
     }
     const prev = fills.find((f) => f.id === draft.id);
     const fill = draftToFill(
@@ -392,9 +395,11 @@ export const useFillcue = create<GarageState>((set, get) => ({
 
   saveServiceDraft: async () => {
     const { serviceDraft, receipt, settings, jobs } = get();
-    if (!serviceDraft.date) {
-      set({ ocrStatus: "Add a date before saving." });
-      throw new Error("Add a date before saving.");
+    const gaps = shopSaveGaps(serviceDraft);
+    if (gaps.length) {
+      const message = `Enter ${gaps.join(", ")} before saving.`;
+      set({ ocrStatus: message });
+      throw new Error(message);
     }
     const prev = jobs.find((j) => j.id === serviceDraft.id);
     const job = draftToJob(
@@ -417,9 +422,11 @@ export const useFillcue = create<GarageState>((set, get) => ({
 
   saveChargeDraft: async () => {
     const { chargeDraft, receipt, settings, charges } = get();
-    if (!chargeDraft.date) {
-      set({ ocrStatus: "Add a date before saving." });
-      throw new Error("Add a date before saving.");
+    const gaps = chargeSaveGaps(chargeDraft);
+    if (gaps.length) {
+      const message = `Enter ${gaps.join(", ")} before saving.`;
+      set({ ocrStatus: message });
+      throw new Error(message);
     }
     const prev = charges.find((c) => c.id === chargeDraft.id);
     const charge = draftToCharge(

@@ -37,6 +37,7 @@ import {
   type ServiceCategory,
   type ServiceStatus,
 } from "@/lib/fillcue/types";
+import { chargeSaveGaps, fuelSaveGaps, shopSaveGaps } from "@/lib/fillcue/gates";
 import { useFillcue, type TabId } from "@/store/fillcue-store";
 
 export function CaptureView({ onTab }: { onTab: (t: TabId) => void }) {
@@ -122,7 +123,7 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Review before save</CardTitle>
         <CardDescription className="mb-3">
-          On iPhone, Preview saves a PDF in Files — not Photos. Tap Scan receipt and choose that PDF, or tap Scan Documents so it comes straight here. Check gallons, price, and odometer before you save.
+          A scan can prefill boxes. Save stays off until gallons, price, total, and odometer each have a number. Type whatever the scan missed.
         </CardDescription>
         <div className="grid grid-cols-2 gap-2">
           <ScanTile src={receipt.preview} caption="Receipt" />
@@ -178,25 +179,27 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
           <Field label="Grade">
             <NativeSelect value={draft.grade} onChange={(v) => setDraft({ grade: v })} options={GRADES} />
           </Field>
-          <Field label="Gallons">
+          <Field label="Gallons" missing={!Number(draft.gallons)}>
             <Input
               inputMode="decimal"
+              required
               value={draft.gallons}
               onChange={(e) => setDraft(pumpPatch(draft, { gallons: e.target.value }))}
             />
           </Field>
-          <Field label="Price / gal">
+          <Field label="Price / gal" missing={!Number(draft.pricePerGal)}>
             <Input
               inputMode="decimal"
+              required
               value={draft.pricePerGal}
               onChange={(e) => setDraft(pumpPatch(draft, { pricePerGal: e.target.value }))}
             />
           </Field>
-          <Field label="Total $">
-            <Input inputMode="decimal" value={draft.total} onChange={(e) => setDraft({ total: e.target.value })} />
+          <Field label="Total $" missing={!Number(draft.total)}>
+            <Input inputMode="decimal" required value={draft.total} onChange={(e) => setDraft({ total: e.target.value })} />
           </Field>
-          <Field label="Odometer">
-            <Input inputMode="numeric" value={draft.odometer} onChange={(e) => setDraft({ odometer: e.target.value })} />
+          <Field label="Odometer" missing={!Number(draft.odometer)}>
+            <Input inputMode="numeric" required value={draft.odometer} onChange={(e) => setDraft({ odometer: e.target.value })} />
           </Field>
           <Field label="Cluster range">
             <Input
@@ -233,7 +236,10 @@ function FuelForm({ onTab }: { onTab: (t: TabId) => void }) {
             <Textarea value={draft.notes} onChange={(e) => setDraft({ notes: e.target.value })} />
           </Field>
           <div className="col-span-2 grid gap-2">
-            <Button type="submit" disabled={ocrBusy}>
+            {fuelSaveGaps(draft).length > 0 ? (
+              <p className="text-sm text-danger">Enter {fuelSaveGaps(draft).join(", ")} before saving.</p>
+            ) : null}
+            <Button type="submit" disabled={ocrBusy || fuelSaveGaps(draft).length > 0}>
               Save fill
             </Button>
             <Button type="button" variant="outline" onClick={resetDraft}>
@@ -294,7 +300,7 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Shop receipt</CardTitle>
         <CardDescription className="mb-3">
-          Tap Scan, then Scan Documents on iPhone (same scanner as Preview). OCR drafts shop, miles, and total.
+          A scan can prefill the shop, miles, and total. Save stays off until the required boxes have numbers.
         </CardDescription>
         <ScanTile src={preview} caption="Shop receipt" />
         <Progress value={ocrProgress} className="mt-3" />
@@ -336,10 +342,10 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
           <Field label="City / State">
             <Input value={draft.city} onChange={(e) => setDraft({ city: e.target.value })} />
           </Field>
-          <Field label="Odometer">
+          <Field label="Odometer" missing={draft.status === "done" && !Number(draft.odometer)}>
             <Input inputMode="numeric" value={draft.odometer} onChange={(e) => setDraft({ odometer: e.target.value })} />
           </Field>
-          <Field label="Total $">
+          <Field label="Total $" missing={draft.status === "done" && !Number(draft.total)}>
             <Input inputMode="decimal" value={draft.total} onChange={(e) => setDraft({ total: e.target.value })} />
           </Field>
           <Field label="Category" className="col-span-2">
@@ -352,17 +358,20 @@ function ShopForm({ onTab }: { onTab: (t: TabId) => void }) {
           <Field label="What was done" className="col-span-2">
             <Input value={draft.summary} onChange={(e) => setDraft({ summary: e.target.value })} />
           </Field>
-          <Field label="Due date" className="col-span-2">
+          <Field label="Due date" className="col-span-2" missing={draft.status === "scheduled" && !draft.dueDate && !Number(draft.dueMiles)}>
             <Input type="date" value={draft.dueDate} onChange={(e) => setDraft({ dueDate: e.target.value })} />
           </Field>
-          <Field label="Due miles">
+          <Field label="Due miles" missing={draft.status === "scheduled" && !draft.dueDate && !Number(draft.dueMiles)}>
             <Input inputMode="numeric" value={draft.dueMiles} onChange={(e) => setDraft({ dueMiles: e.target.value })} />
           </Field>
           <Field label="Notes" className="col-span-2">
             <Textarea value={draft.notes} onChange={(e) => setDraft({ notes: e.target.value })} />
           </Field>
           <div className="col-span-2 grid gap-2">
-            <Button type="submit" disabled={ocrBusy}>
+            {shopSaveGaps(draft).length > 0 ? (
+              <p className="text-sm text-danger">Enter {shopSaveGaps(draft).join(", ")} before saving.</p>
+            ) : null}
+            <Button type="submit" disabled={ocrBusy || shopSaveGaps(draft).length > 0}>
               {draft.status === "scheduled" ? "Save schedule" : "Save shop visit"}
             </Button>
             <Button type="button" variant="outline" onClick={resetServiceDraft}>
@@ -430,7 +439,7 @@ function ChargeForm({ onTab }: { onTab: (t: TabId) => void }) {
       <Card>
         <CardTitle>Charge receipt</CardTitle>
         <CardDescription className="mb-3">
-          Tap Scan, then Scan Documents on iPhone. A B&W scan stays on this device. Nothing is uploaded.
+          A scan can prefill the charger, energy, and total. Save stays off until kWh, price, total, and odometer each have a number.
         </CardDescription>
         <ScanTile src={preview} caption="Charge receipt" />
         <Progress value={ocrProgress} className="mt-3" />
@@ -469,27 +478,36 @@ function ChargeForm({ onTab }: { onTab: (t: TabId) => void }) {
           <Field label="City / State">
             <Input value={draft.city} onChange={(e) => setDraft({ city: e.target.value })} />
           </Field>
-          <Field label="kWh">
-            <Input inputMode="decimal" value={draft.kwh} onChange={(e) => setDraft({ kwh: e.target.value })} />
-          </Field>
-          <Field label="$ / kWh">
+          <Field label="kWh" missing={!Number(draft.kwh)}>
             <Input
               inputMode="decimal"
-              value={draft.pricePerKwh}
-              onChange={(e) => setDraft({ pricePerKwh: e.target.value })}
+              required
+              value={draft.kwh}
+              onChange={(e) => setDraft(chargePatch(draft, { kwh: e.target.value }))}
             />
           </Field>
-          <Field label="Total $">
-            <Input inputMode="decimal" value={draft.total} onChange={(e) => setDraft({ total: e.target.value })} />
+          <Field label="$ / kWh" missing={!Number(draft.pricePerKwh)}>
+            <Input
+              inputMode="decimal"
+              required
+              value={draft.pricePerKwh}
+              onChange={(e) => setDraft(chargePatch(draft, { pricePerKwh: e.target.value }))}
+            />
           </Field>
-          <Field label="Odometer">
-            <Input inputMode="numeric" value={draft.odometer} onChange={(e) => setDraft({ odometer: e.target.value })} />
+          <Field label="Total $" missing={!Number(draft.total)}>
+            <Input inputMode="decimal" required value={draft.total} onChange={(e) => setDraft({ total: e.target.value })} />
+          </Field>
+          <Field label="Odometer" missing={!Number(draft.odometer)}>
+            <Input inputMode="numeric" required value={draft.odometer} onChange={(e) => setDraft({ odometer: e.target.value })} />
           </Field>
           <Field label="Notes" className="col-span-2">
             <Textarea value={draft.notes} onChange={(e) => setDraft({ notes: e.target.value })} />
           </Field>
           <div className="col-span-2 grid gap-2">
-            <Button type="submit" disabled={ocrBusy}>
+            {chargeSaveGaps(draft).length > 0 ? (
+              <p className="text-sm text-danger">Enter {chargeSaveGaps(draft).join(", ")} before saving.</p>
+            ) : null}
+            <Button type="submit" disabled={ocrBusy || chargeSaveGaps(draft).length > 0}>
               Save charge
             </Button>
             <Button type="button" variant="outline" onClick={resetChargeDraft}>
@@ -545,19 +563,44 @@ function DeleteDialog({ title, onConfirm }: { title: string; onConfirm: () => Pr
   );
 }
 
+function chargePatch(
+  draft: { total: string; kwh: string; pricePerKwh: string },
+  patch: { kwh?: string; pricePerKwh?: string },
+) {
+  const total = Number(draft.total);
+  const next: { kwh?: string; pricePerKwh?: string } = { ...patch };
+  if (!(total > 0)) return next;
+  if (patch.pricePerKwh != null && patch.pricePerKwh !== "" && !draft.kwh) {
+    const rate = Number(patch.pricePerKwh);
+    const kwh = rate > 0 ? total / rate : 0;
+    if (kwh > 0 && kwh < 200) next.kwh = (Math.round(kwh * 1000) / 1000).toString();
+  }
+  if (patch.kwh != null && patch.kwh !== "" && !draft.pricePerKwh) {
+    const kwh = Number(patch.kwh);
+    const rate = kwh > 0 ? total / kwh : 0;
+    if (rate > 0 && rate < 2) next.pricePerKwh = (Math.round(rate * 1000) / 1000).toString();
+  }
+  return next;
+}
+
 function Field({
   label,
   children,
   className,
+  missing,
 }: {
   label: string;
   children: ReactNode;
   className?: string;
+  missing?: boolean;
 }) {
   return (
     <label className={`flex min-w-0 flex-col gap-1 ${className ?? ""}`}>
-      <Label>{label}</Label>
-      {children}
+      <Label>
+        {label}
+        {missing ? <span className="ml-1 font-normal text-danger">Required</span> : null}
+      </Label>
+      <div className={missing ? "rounded-md ring-2 ring-danger" : undefined}>{children}</div>
     </label>
   );
 }
